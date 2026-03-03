@@ -92,14 +92,14 @@ email:
   login-url: https://turbo-metallurg-montazh.ru/login
 
 activation:
-  key: ${ACTIVATION_KEY:change-me-change-me-change-me-change-me} # must be >32 chars
+  key: ${ACTIVATION_KEY:change-me-change-me-change-me-change-me}
   expiration-ms: 8640000   # 360000 * 24
 
 pagination:
   items-on-page: 50
 
 schedule:
-  time: "0 53 8 * * ?"
+  time: "0 0 3 * * ?"
 
 format:
   date-time: "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
