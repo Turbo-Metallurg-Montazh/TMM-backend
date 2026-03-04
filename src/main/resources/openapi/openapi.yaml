@@ -11,6 +11,9 @@ paths:
   /login:
     $ref: "./contracts/auth/login.yaml#/login"
 
+  /password-reset/confirm:
+    $ref: "./contracts/auth/login.yaml#/passwordResetConfirm"
+
   # Эндпоинты панели администратора для управления пользователями
   /admin/users:
     $ref: "./contracts/auth/admin-users.yaml#/adminUsers"
@@ -20,6 +23,9 @@ paths:
 
   /admin/users/{username}/reset-password:
     $ref: "./contracts/auth/admin-users.yaml#/adminUserResetPassword"
+
+  /admin/users/{username}/enabled:
+    $ref: "./contracts/auth/admin-users.yaml#/adminUserEnabled"
 
   /admin/roles:
     $ref: "./contracts/auth/rbac-admin.yaml#/adminRoles"

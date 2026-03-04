@@ -44,3 +44,40 @@ login:
               title: Login501Response
               allOf:
                 - $ref: "../../models/auth.yaml#/components/schemas/MessageResponse"
+
+passwordResetConfirm:
+  post:
+    tags: [Auth]
+    summary: Confirm password reset by token
+    operationId: confirmPasswordReset
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../../models/auth.yaml#/components/schemas/PasswordResetConfirmRequest"
+    responses:
+      '200':
+        description: Password reset successful
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: "../../models/auth.yaml#/components/schemas/MessageResponse"
+
+      '400':
+        description: Invalid request or expired token
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: "../../models/auth.yaml#/components/schemas/ErrorResponse"
+
+      '501':
+        description: Not implemented
+        content:
+          application/json:
+            schema:
+              title: ConfirmPasswordReset501Response
+              allOf:
+                - $ref: "../../models/auth.yaml#/components/schemas/MessageResponse"

@@ -3,9 +3,9 @@ package com.kindred.emkcrm_project_backend.authentication.impl;
 import com.kindred.emkcrm_project_backend.api.AdminUsersApiDelegate;
 import com.kindred.emkcrm_project_backend.authentication.rbac.AdminUserManagementService;
 import com.kindred.emkcrm_project_backend.model.AdminCreateUserRequest;
-import com.kindred.emkcrm_project_backend.model.AdminResetPasswordRequest;
 import com.kindred.emkcrm_project_backend.model.AdminUserDto;
 import com.kindred.emkcrm_project_backend.model.MessageResponse;
+import com.kindred.emkcrm_project_backend.model.UpdateUserEnabledRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -42,7 +42,12 @@ public class AdminUsersApiDelegateImpl implements AdminUsersApiDelegate {
     }
 
     @Override
-    public ResponseEntity<MessageResponse> resetUserPassword(String username, AdminResetPasswordRequest request) {
-        return new ResponseEntity<>(adminUserManagementService.resetUserPassword(username, request), HttpStatus.OK);
+    public ResponseEntity<MessageResponse> resetUserPassword(String username) {
+        return new ResponseEntity<>(adminUserManagementService.resetUserPassword(username), HttpStatus.OK);
+    }
+
+    @Override
+    public ResponseEntity<AdminUserDto> updateUserEnabled(String username, UpdateUserEnabledRequest request) {
+        return new ResponseEntity<>(adminUserManagementService.updateUserEnabled(username, request), HttpStatus.OK);
     }
 }

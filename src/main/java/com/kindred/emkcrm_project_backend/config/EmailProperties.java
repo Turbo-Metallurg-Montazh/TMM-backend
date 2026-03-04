@@ -7,6 +7,7 @@ public record EmailProperties(
         String domain,
         String activation_link,
         String host_email,
-        String login_url
+        String login_url,
+        String password_reset_url
 ) {
 }

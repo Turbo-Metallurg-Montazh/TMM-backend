@@ -90,6 +90,7 @@ email:
   activation-link: http://localhost:8080/api/activate?token=
   host-email: ${EMAIL_HOST:no-reply@example.com}
   login-url: https://turbo-metallurg-montazh.ru/login
+  password-reset-url: ${PASSWORD_RESET_URL:https://turbo-metallurg-montazh.ru/reset-password}
 
 activation:
   key: ${ACTIVATION_KEY:change-me-change-me-change-me-change-me}
@@ -100,6 +101,7 @@ pagination:
 
 schedule:
   time: "0 0 3 * * ?"
+  password-reset-cleanup-cron: "0 0 23 * * SUN"
 
 format:
   date-time: "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"

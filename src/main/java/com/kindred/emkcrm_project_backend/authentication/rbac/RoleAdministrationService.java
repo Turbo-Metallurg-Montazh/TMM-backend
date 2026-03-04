@@ -66,7 +66,8 @@ public class RoleAdministrationService {
                 .roles(roleCodes)
                 .firstName(user.getFirstName())
                 .middleName(user.getMiddleName())
-                .lastName(user.getLastName());
+                .lastName(user.getLastName())
+                .enabled(user.isEnabled());
     }
 
     private User requireUser(String username) {

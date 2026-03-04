@@ -30,7 +30,10 @@ public class UserService {
 
     public User validateUsername(LoginRequest loginInfo) {
         User user = findUserWithRolesByCredentials(loginInfo.getUsername(), loginInfo.getEmail());
-        if (user != null && passwordEncoder.matches(loginInfo.getPassword(), user.getPassword())){
+        if (user != null && passwordEncoder.matches(loginInfo.getPassword(), user.getPassword())) {
+            if (!user.isEnabled()) {
+                throw new UnauthorizedException("User account is disabled");
+            }
             return user;
         }
         throw new UnauthorizedException("Bad login or password");

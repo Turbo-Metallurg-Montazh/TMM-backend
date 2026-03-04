@@ -18,10 +18,12 @@ import java.nio.charset.StandardCharsets;
 public class EmailService {
 
     private static final String REGISTRATION_EMAIL_TEMPLATE_PATH = "email-templates/registration-email.html";
+    private static final String PASSWORD_RESET_EMAIL_TEMPLATE_PATH = "email-templates/password-reset-email.html";
     
     private final JavaMailSender mailSender;
     private final EmailProperties emailProperties;
     private String registrationEmailTemplate;
+    private String passwordResetEmailTemplate;
 
     public EmailService(
             JavaMailSender mailSender,
@@ -32,23 +34,8 @@ public class EmailService {
 
     @PostConstruct
     public void init() {
-        try {
-            ClassPathResource resource = new ClassPathResource(REGISTRATION_EMAIL_TEMPLATE_PATH);
-            if (!resource.exists()) {
-                throw new IllegalStateException(
-                        "Email template not found: " + REGISTRATION_EMAIL_TEMPLATE_PATH
-                );
-            }
-            registrationEmailTemplate = StreamUtils.copyToString(
-                    resource.getInputStream(),
-                    StandardCharsets.UTF_8
-            );
-        } catch (IOException e) {
-            throw new IllegalStateException(
-                    "Failed to load email template: " + REGISTRATION_EMAIL_TEMPLATE_PATH,
-                    e
-            );
-        }
+        registrationEmailTemplate = loadTemplate(REGISTRATION_EMAIL_TEMPLATE_PATH);
+        passwordResetEmailTemplate = loadTemplate(PASSWORD_RESET_EMAIL_TEMPLATE_PATH);
     }
 
     public void sendActivationEmail(String to, String activationLink) throws MessagingException {
@@ -73,10 +60,40 @@ public class EmailService {
         mailSender.send(message);
     }
 
+    public void sendPasswordResetEmail(String to, String username, String resetUrl) throws MessagingException {
+        MimeMessage message = mailSender.createMimeMessage();
+        MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+        helper.setFrom(emailProperties.host_email());
+        helper.setTo(to);
+        helper.setSubject("Сброс пароля в системе EMK-CRM");
+
+        String htmlContent = buildPasswordResetEmailHtml(username, resetUrl);
+        helper.setText(htmlContent, true);
+        mailSender.send(message);
+    }
+
     private String buildRegistrationEmailHtml(String username, String password, String loginUrl) {
         return registrationEmailTemplate
                 .replace("{{USERNAME}}", username)
                 .replace("{{PASSWORD}}", password)
                 .replace("{{LOGIN_URL}}", loginUrl);
+    }
+
+    private String buildPasswordResetEmailHtml(String username, String resetUrl) {
+        return passwordResetEmailTemplate
+                .replace("{{USERNAME}}", username)
+                .replace("{{RESET_URL}}", resetUrl);
+    }
+
+    private String loadTemplate(String templatePath) {
+        try {
+            ClassPathResource resource = new ClassPathResource(templatePath);
+            if (!resource.exists()) {
+                throw new IllegalStateException("Email template not found: " + templatePath);
+            }
+            return StreamUtils.copyToString(resource.getInputStream(), StandardCharsets.UTF_8);
+        } catch (IOException e) {
+            throw new IllegalStateException("Failed to load email template: " + templatePath, e);
+        }
     }
 }

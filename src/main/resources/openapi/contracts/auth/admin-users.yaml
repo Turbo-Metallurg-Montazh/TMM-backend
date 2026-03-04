@@ -125,6 +125,14 @@ adminUserByUsername:
               allOf:
                 - $ref: "../../models/auth.yaml#/components/schemas/MessageResponse"
 
+      '400':
+        description: Нельзя удалить себя или активного пользователя
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: "../../models/auth.yaml#/components/schemas/ErrorResponse"
+
       '404':
         description: User not found
         content:
@@ -146,7 +154,8 @@ adminUserByUsername:
 adminUserResetPassword:
   post:
     tags: [AdminUsers]
-    summary: Reset user password
+    summary: Send password reset link
+    description: Отправляет пользователю письмо со ссылкой для сброса пароля.
     operationId: resetUserPassword
     parameters:
       - in: path
@@ -154,15 +163,9 @@ adminUserResetPassword:
         required: true
         schema:
           type: string
-    requestBody:
-      required: true
-      content:
-        application/json:
-          schema:
-            $ref: "../../models/auth.yaml#/components/schemas/AdminResetPasswordRequest"
     responses:
       '200':
-        description: Password reset
+        description: Password reset link sent
         content:
           application/json:
             schema:
@@ -187,3 +190,52 @@ adminUserResetPassword:
                 - $ref: "../../models/auth.yaml#/components/schemas/MessageResponse"
 
 
+adminUserEnabled:
+  put:
+    tags: [AdminUsers]
+    summary: Activate or deactivate user
+    operationId: updateUserEnabled
+    parameters:
+      - in: path
+        name: username
+        required: true
+        schema:
+          type: string
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../../models/auth.yaml#/components/schemas/UpdateUserEnabledRequest"
+    responses:
+      '200':
+        description: Updated user status
+        content:
+          application/json:
+            schema:
+              $ref: "../../models/auth.yaml#/components/schemas/AdminUserDto"
+
+      '400':
+        description: Нельзя деактивировать самого себя
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: "../../models/auth.yaml#/components/schemas/ErrorResponse"
+
+      '404':
+        description: User not found
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: "../../models/auth.yaml#/components/schemas/ErrorResponse"
+
+      '501':
+        description: Not implemented
+        content:
+          application/json:
+            schema:
+              title: UpdateUserEnabled501Response
+              allOf:
+                - $ref: "../../models/auth.yaml#/components/schemas/MessageResponse"

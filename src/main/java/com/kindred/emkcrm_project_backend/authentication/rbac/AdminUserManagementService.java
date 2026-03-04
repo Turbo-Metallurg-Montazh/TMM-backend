@@ -1,5 +1,6 @@
 package com.kindred.emkcrm_project_backend.authentication.rbac;
 
+import com.kindred.emkcrm_project_backend.authentication.PasswordResetService;
 import com.kindred.emkcrm_project_backend.authentication.UserService;
 import com.kindred.emkcrm_project_backend.config.EmailProperties;
 import com.kindred.emkcrm_project_backend.db.entities.Role;
@@ -9,9 +10,9 @@ import com.kindred.emkcrm_project_backend.exception.BadRequestException;
 import com.kindred.emkcrm_project_backend.exception.ConflictException;
 import com.kindred.emkcrm_project_backend.exception.NotFoundException;
 import com.kindred.emkcrm_project_backend.model.AdminCreateUserRequest;
-import com.kindred.emkcrm_project_backend.model.AdminResetPasswordRequest;
 import com.kindred.emkcrm_project_backend.model.AdminUserDto;
 import com.kindred.emkcrm_project_backend.model.MessageResponse;
+import com.kindred.emkcrm_project_backend.model.UpdateUserEnabledRequest;
 import com.kindred.emkcrm_project_backend.services.email.EmailService;
 import com.kindred.emkcrm_project_backend.utils.PasswordGenerator;
 import com.kindred.emkcrm_project_backend.utils.UsernameGenerator;
@@ -39,6 +40,7 @@ public class AdminUserManagementService {
     private final PasswordGenerator passwordGenerator;
     private final EmailService emailService;
     private final EmailProperties emailProperties;
+    private final PasswordResetService passwordResetService;
 
     public AdminUserManagementService(
             UserRepository userRepository,
@@ -48,7 +50,8 @@ public class AdminUserManagementService {
             UsernameGenerator usernameGenerator,
             PasswordGenerator passwordGenerator,
             EmailService emailService,
-            EmailProperties emailProperties
+            EmailProperties emailProperties,
+            PasswordResetService passwordResetService
     ) {
         this.userRepository = userRepository;
         this.userService = userService;
@@ -58,6 +61,7 @@ public class AdminUserManagementService {
         this.passwordGenerator = passwordGenerator;
         this.emailService = emailService;
         this.emailProperties = emailProperties;
+        this.passwordResetService = passwordResetService;
     }
 
     @Transactional(readOnly = true)
@@ -127,6 +131,12 @@ public class AdminUserManagementService {
     @PreAuthorize("hasAuthority('RBAC.USER.WRITE')")
     public MessageResponse deleteUserByUsername(String username) {
         User user = requireUser(username);
+        if (isCurrentUser(user.getUsername())) {
+            throw new BadRequestException("Пользователь не может удалить сам себя");
+        }
+        if (user.isEnabled()) {
+            throw new BadRequestException("Нельзя удалить активного пользователя. Сначала деактивируйте пользователя");
+        }
         userRepository.delete(user);
 
         MessageResponse response = new MessageResponse();
@@ -136,17 +146,30 @@ public class AdminUserManagementService {
 
     @Transactional
     @PreAuthorize("hasAuthority('RBAC.USER.WRITE')")
-    public MessageResponse resetUserPassword(String username, AdminResetPasswordRequest request) {
-        if (request.getNewPassword() == null || request.getNewPassword().isBlank()) {
-            throw new BadRequestException("newPassword is required");
+    public AdminUserDto updateUserEnabled(String username, UpdateUserEnabledRequest request) {
+        if (request.getEnabled() == null) {
+            throw new BadRequestException("enabled is required");
         }
 
         User user = requireUser(username);
-        user.setPassword(request.getNewPassword());
-        userService.encodePasswordAndSaveUser(user);
+        if (!request.getEnabled() && isCurrentUser(user.getUsername())) {
+            throw new BadRequestException("Пользователь не может деактивировать сам себя");
+        }
+
+        user.setEnabled(request.getEnabled());
+        userRepository.save(user);
+        Set<Role> roles = rbacService.findRolesByUsername(username);
+        return toDto(user, roles);
+    }
+
+    @Transactional
+    @PreAuthorize("hasAuthority('RBAC.USER.WRITE')")
+    public MessageResponse resetUserPassword(String username) {
+        User user = requireUser(username);
+        passwordResetService.sendPasswordResetLink(user);
 
         MessageResponse response = new MessageResponse();
-        response.setMessage(String.format("Password for user %s has been reset", username));
+        response.setMessage(String.format("Ссылка для сброса пароля отправлена пользователю %s", username));
         return response;
     }
 
@@ -156,6 +179,11 @@ public class AdminUserManagementService {
             throw new NotFoundException("User not found");
         }
         return user;
+    }
+
+    private boolean isCurrentUser(String targetUsername) {
+        String currentUsername = securityActorService.getCurrentUsernameOrSystem();
+        return currentUsername.equalsIgnoreCase(targetUsername);
     }
 
     private AdminUserDto toDto(User user, Set<Role> roles) {
@@ -170,6 +198,7 @@ public class AdminUserManagementService {
                 .roles(roleCodes)
                 .firstName(user.getFirstName())
                 .middleName(user.getMiddleName())
-                .lastName(user.getLastName());
+                .lastName(user.getLastName())
+                .enabled(user.isEnabled());
     }
 }

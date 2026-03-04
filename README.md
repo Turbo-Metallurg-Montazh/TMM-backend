@@ -79,6 +79,7 @@ export SPRING_DATASOURCE_PASSWORD=postgres
 Публичные:
 
 - `POST /login` - логин по username/email + password, возвращает JWT
+- `POST /password-reset/confirm` - подтверждение сброса пароля по токену из письма
 - `POST /public-ai/chat` - запрос к AI-провайдеру
 
 Защищенные (по ролям):
@@ -89,7 +90,10 @@ export SPRING_DATASOURCE_PASSWORD=postgres
 - `GET /delete-user?user=...`
 - `GET/POST /admin/users`
 - `GET/DELETE /admin/users/{username}`
-- `POST /admin/users/{username}/reset-password`
+- `POST /admin/users/{username}/reset-password` - отправка письма со ссылкой на сброс пароля
+
+Автоочистка reset-токенов:
+- Использованные и просроченные токены из `password_reset_token` удаляются по cron `schedule.password-reset-cleanup-cron` (по умолчанию раз в неделю: в воскресенье в 23:00, `Europe/Moscow`).
 
 Служебный endpoint:
 
