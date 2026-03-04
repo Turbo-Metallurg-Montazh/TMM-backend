@@ -90,9 +90,10 @@ public class AdminUserManagementService {
             throw new ConflictException("Email already taken");
         }
 
+        String middleName = request.getMiddleName() == null ? "" : request.getMiddleName().trim();
         String username = usernameGenerator.generateUniqueUsername(
                 request.getFirstName(),
-                request.getMiddleName().orElse(""),
+                middleName,
                 request.getLastName()
         );
 
@@ -102,7 +103,7 @@ public class AdminUserManagementService {
         user.setUsername(username);
         user.setEmail(request.getEmail());
         user.setFirstName(request.getFirstName());
-        user.setMiddleName(request.getMiddleName().orElse(null));
+        user.setMiddleName(middleName.isBlank() ? null : middleName);
         user.setLastName(request.getLastName());
         user.setPassword(generatedPassword);
         user.setEnabled(true);

@@ -58,7 +58,6 @@ components:
           type: string
         middleName:
           type: string
-          nullable: true
         lastName:
           type: string
         enabled:
@@ -72,7 +71,6 @@ components:
           type: string
         middleName:
           type: string
-          nullable: true
         lastName:
           type: string
         email:
