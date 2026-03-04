@@ -9,6 +9,7 @@ import com.kindred.emkcrm_project_backend.db.repositories.UserRepository;
 import com.kindred.emkcrm_project_backend.exception.BadRequestException;
 import com.kindred.emkcrm_project_backend.exception.ConflictException;
 import com.kindred.emkcrm_project_backend.exception.NotFoundException;
+import com.kindred.emkcrm_project_backend.exception.ServiceUnavailableException;
 import com.kindred.emkcrm_project_backend.model.AdminCreateUserRequest;
 import com.kindred.emkcrm_project_backend.model.AdminUserDto;
 import com.kindred.emkcrm_project_backend.model.MessageResponse;
@@ -19,6 +20,7 @@ import com.kindred.emkcrm_project_backend.utils.PasswordGenerator;
 import com.kindred.emkcrm_project_backend.utils.UsernameGenerator;
 import jakarta.mail.MessagingException;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.mail.MailException;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -122,8 +124,9 @@ public class AdminUserManagementService {
 
         try {
             emailService.sendRegistrationEmail(savedUser.getEmail(), username, generatedPassword, emailProperties.login_url());
-        } catch (MessagingException e) {
+        } catch (MessagingException | MailException e) {
             log.error("Failed to send registration email to {}: {}", savedUser.getEmail(), e.getMessage(), e);
+            throw new ServiceUnavailableException("Не удалось отправить письмо с учетными данными");
         }
 
         return toDto(savedUser, roles);

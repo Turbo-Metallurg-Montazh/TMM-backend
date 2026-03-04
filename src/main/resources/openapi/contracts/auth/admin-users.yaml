@@ -60,6 +60,14 @@ adminUsers:
               allOf:
                 - $ref: "../../models/auth.yaml#/components/schemas/ErrorResponse"
 
+      '503':
+        description: Failed to send email
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: "../../models/auth.yaml#/components/schemas/ErrorResponse"
+
       '501':
         description: Not implemented
         content:

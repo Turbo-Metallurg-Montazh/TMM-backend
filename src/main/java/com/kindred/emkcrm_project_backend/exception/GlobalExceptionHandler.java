@@ -1,9 +1,12 @@
 package com.kindred.emkcrm_project_backend.exception;
 
 import com.kindred.emkcrm_project_backend.model.ErrorResponse;
+import jakarta.mail.SendFailedException;
 import jakarta.validation.ConstraintViolationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.mail.MailException;
+import org.springframework.mail.MailSendException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.http.HttpStatus;
@@ -55,6 +58,25 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleServiceUnavailable(ServiceUnavailableException e) {
         log.warn("Service unavailable: {}", e.getMessage());
         return error(HttpStatus.SERVICE_UNAVAILABLE, e.getMessage());
+    }
+
+    @ExceptionHandler(MailSendException.class)
+    public ResponseEntity<ErrorResponse> handleMailSendException(MailSendException e) {
+        Throwable cause = e.getMostSpecificCause();
+        if (cause instanceof SendFailedException sendFailedException
+                && sendFailedException.getInvalidAddresses() != null
+                && sendFailedException.getInvalidAddresses().length > 0) {
+            return error(HttpStatus.BAD_REQUEST, "Некорректный email адрес получателя");
+        }
+
+        log.warn("Failed to send email: {}", e.getMessage());
+        return error(HttpStatus.SERVICE_UNAVAILABLE, "Не удалось отправить email");
+    }
+
+    @ExceptionHandler(MailException.class)
+    public ResponseEntity<ErrorResponse> handleMailException(MailException e) {
+        log.warn("Mail error: {}", e.getMessage());
+        return error(HttpStatus.SERVICE_UNAVAILABLE, "Не удалось отправить email");
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
