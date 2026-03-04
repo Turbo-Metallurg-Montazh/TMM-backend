@@ -56,16 +56,12 @@ components:
             type: string
         firstName:
           type: string
-          nullable: true
         middleName:
           type: string
           nullable: true
         lastName:
           type: string
-          nullable: true
-        fullName:
-          type: string
-          nullable: true
+      required: [firstName, lastName]
 
     AdminCreateUserRequest:
       type: object

@@ -10,6 +10,9 @@ CREATE TABLE IF NOT EXISTS user_info
     user_id     BIGSERIAL PRIMARY KEY,
     username    VARCHAR(255) NOT NULL UNIQUE,
     email       VARCHAR(255) NOT NULL UNIQUE,
+    first_name  VARCHAR(255) NOT NULL,
+    middle_name VARCHAR(255),
+    last_name   VARCHAR(255) NOT NULL,
     password    VARCHAR(255) NOT NULL,
     enabled     BOOLEAN      NOT NULL DEFAULT TRUE,
     created_at  TIMESTAMP    NOT NULL DEFAULT now(),
@@ -279,33 +282,33 @@ CREATE INDEX IF NOT EXISTS idx_favorite_markers_marker_id
 -- RBAC SEED
 -- =========================================================
 WITH permission_catalog(code, description) AS (
-    VALUES ('RBAC.ROLE.READ', 'Read roles'),
-           ('RBAC.ROLE.WRITE', 'Create/update roles'),
-           ('RBAC.ROLE.DELETE', 'Delete roles'),
-           ('RBAC.USER.READ', 'Read users'),
-           ('RBAC.USER.WRITE', 'Manage users and user role assignments'),
-           ('RBAC.PERMISSION.READ', 'Read permission catalog'),
+    VALUES ('RBAC.ROLE.READ', 'Просмотр ролей'),
+           ('RBAC.ROLE.WRITE', 'Создание и изменение ролей'),
+           ('RBAC.ROLE.DELETE', 'Удаление ролей'),
+           ('RBAC.USER.READ', 'Просмотр пользователей'),
+           ('RBAC.USER.WRITE', 'Управление пользователями и назначением ролей'),
+           ('RBAC.PERMISSION.READ', 'Просмотр каталога прав доступа'),
 
-           ('TENDER.SEARCH', 'Search tenders'),
-           ('TENDER.VIEW', 'View tender details'),
-           ('TENDER.EDIT', 'Edit tenders'),
-           ('TENDER.EXPORT', 'Export tender data'),
-           ('TENDER_FILTER.WRITE', 'Manage tender filters'),
+           ('TENDER.SEARCH', 'Поиск тендеров'),
+           ('TENDER.VIEW', 'Просмотр деталей тендера'),
+           ('TENDER.EDIT', 'Редактирование тендеров'),
+           ('TENDER.EXPORT', 'Экспорт данных тендеров'),
+           ('TENDER_FILTER.WRITE', 'Управление фильтрами тендеров'),
 
-           ('OFFER.APPROVE', 'Approve offers'),
-           ('OFFER.VIEW_ALL', 'View all offers'),
-           ('OFFER.CALCULATE', 'Calculate offers'),
-           ('OFFER.EDIT', 'Edit offers'),
-           ('OFFER.GENERATE_CP', 'Generate commercial proposals'),
-           ('OFFER.SUBMIT', 'Submit offers'),
+           ('OFFER.APPROVE', 'Согласование предложений'),
+           ('OFFER.VIEW_ALL', 'Просмотр всех предложений'),
+           ('OFFER.CALCULATE', 'Расчет предложений'),
+           ('OFFER.EDIT', 'Редактирование предложений'),
+           ('OFFER.GENERATE_CP', 'Формирование коммерческих предложений'),
+           ('OFFER.SUBMIT', 'Отправка предложений'),
 
-           ('REPORTS.VIEW', 'View reports'),
-           ('PROCUREMENT.SELECT_ANALOGS', 'Select analog products'),
-           ('PROCUREMENT.EDIT_NONDEALER_POSITIONS', 'Edit non-dealer procurement positions'),
-           ('CONTRACTOR.CHECK_RELIABILITY', 'Check contractor reliability'),
-           ('CONTRACTOR.VIEW_REPORTS', 'View contractor reports'),
-           ('INVENTORY.NOLIQUID.VIEW', 'View non-liquid inventory'),
-           ('INVENTORY.NOLIQUID.MANAGE', 'Manage non-liquid inventory')
+           ('REPORTS.VIEW', 'Просмотр отчетов'),
+           ('PROCUREMENT.SELECT_ANALOGS', 'Подбор аналогов товаров'),
+           ('PROCUREMENT.EDIT_NONDEALER_POSITIONS', 'Редактирование позиций закупки не у дилера'),
+           ('CONTRACTOR.CHECK_RELIABILITY', 'Проверка надежности контрагента'),
+           ('CONTRACTOR.VIEW_REPORTS', 'Просмотр отчетов по контрагенту'),
+           ('INVENTORY.NOLIQUID.VIEW', 'Просмотр неликвидных остатков'),
+           ('INVENTORY.NOLIQUID.MANAGE', 'Управление неликвидными остатками')
 )
 INSERT
 INTO permission (code, description)

@@ -24,10 +24,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @Slf4j
 @Service
@@ -166,24 +164,12 @@ public class AdminUserManagementService {
                 .sorted(String::compareTo)
                 .collect(Collectors.toList());
 
-        String fullName = buildFullName(user.getLastName(), user.getFirstName(), user.getMiddleName());
-
         return new AdminUserDto()
                 .username(user.getUsername())
                 .email(user.getEmail())
                 .roles(roleCodes)
                 .firstName(user.getFirstName())
                 .middleName(user.getMiddleName())
-                .lastName(user.getLastName())
-                .fullName(fullName);
-    }
-
-    private String buildFullName(String lastName, String firstName, String middleName) {
-        String fullName = Stream.of(lastName, firstName, middleName)
-                .filter(Objects::nonNull)
-                .map(String::trim)
-                .filter(part -> !part.isEmpty())
-                .collect(Collectors.joining(" "));
-        return fullName.isEmpty() ? null : fullName;
+                .lastName(user.getLastName());
     }
 }
