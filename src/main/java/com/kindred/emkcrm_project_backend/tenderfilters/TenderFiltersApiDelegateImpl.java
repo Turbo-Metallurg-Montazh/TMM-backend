@@ -5,11 +5,15 @@ import com.kindred.emkcrm_project_backend.model.AddTenderFilterRequest;
 import com.kindred.emkcrm_project_backend.model.ExportTendersByFilterRequest;
 import com.kindred.emkcrm_project_backend.model.ExportTendersByFilterResponse;
 import com.kindred.emkcrm_project_backend.model.MessageResponse;
+import com.kindred.emkcrm_project_backend.model.TenderFilterDetailsResponse;
+import com.kindred.emkcrm_project_backend.model.TenderFilterSummaryResponse;
 import com.kindred.emkcrm_project_backend.services.TenderFilterExportService;
 import com.kindred.emkcrm_project_backend.services.TenderFilterManagementService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 @Service
 public class TenderFiltersApiDelegateImpl implements TenderFiltersApiDelegate {
@@ -30,6 +34,28 @@ public class TenderFiltersApiDelegateImpl implements TenderFiltersApiDelegate {
         MessageResponse response = new MessageResponse();
         response.setMessage(tenderFilterManagementService.addTenderFilter(addTenderFilterRequest));
         return new ResponseEntity<>(response, HttpStatus.CREATED);
+    }
+
+    @Override
+    public ResponseEntity<List<TenderFilterSummaryResponse>> listTenderFilters() {
+        return ResponseEntity.ok(tenderFilterManagementService.listTenderFilters());
+    }
+
+    @Override
+    public ResponseEntity<TenderFilterDetailsResponse> getTenderFilterByName(String filterName) {
+        return ResponseEntity.ok(tenderFilterManagementService.getTenderFilterByName(filterName));
+    }
+
+    @Override
+    public ResponseEntity<TenderFilterDetailsResponse> updateTenderFilterByName(String filterName, AddTenderFilterRequest addTenderFilterRequest) {
+        return ResponseEntity.ok(tenderFilterManagementService.updateTenderFilterByName(filterName, addTenderFilterRequest));
+    }
+
+    @Override
+    public ResponseEntity<MessageResponse> deleteTenderFilterByName(String filterName) {
+        MessageResponse response = new MessageResponse();
+        response.setMessage(tenderFilterManagementService.deleteTenderFilterByName(filterName));
+        return ResponseEntity.ok(response);
     }
 
     @Override

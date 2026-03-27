@@ -98,7 +98,11 @@ export SPRING_DATASOURCE_PASSWORD=postgres
 Служебный endpoint:
 
 - `POST /tender-filters` - добавление фильтра тендеров
+- `GET /tender-filters` - список названий и статусов фильтров
 - `POST /tender-filters/export` - выгрузка тендеров по имени фильтра
+- `GET /tender-filters/{filterName}` - полная информация о фильтре
+- `PUT /tender-filters/{filterName}` - обновление фильтра
+- `DELETE /tender-filters/{filterName}` - удаление фильтра
 
 ## База данных и миграции
 

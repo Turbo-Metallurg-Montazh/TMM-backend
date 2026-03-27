@@ -1,4 +1,33 @@
 tenderFilters:
+  get:
+    tags: [TenderFilters]
+    summary: List saved tender filters
+    description: Возвращает названия и статусы всех сохраненных фильтров.
+    operationId: listTenderFilters
+    responses:
+      '200':
+        description: Saved filter summaries
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: "../../models/tender-filters.yaml#/components/schemas/TenderFilterSummaryResponse"
+
+      '401':
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: "../../models/auth.yaml#/components/schemas/ErrorResponse"
+
+      '403':
+        description: Forbidden
+        content:
+          application/json:
+            schema:
+              $ref: "../../models/auth.yaml#/components/schemas/ErrorResponse"
+
   post:
     tags: [TenderFilters]
     summary: Add tender filter
@@ -103,6 +132,147 @@ tenderFiltersExport:
 
       '503':
         description: External API unavailable
+        content:
+          application/json:
+            schema:
+              $ref: "../../models/auth.yaml#/components/schemas/ErrorResponse"
+
+tenderFilterByName:
+  get:
+    tags: [TenderFilters]
+    summary: Get tender filter by name
+    description: Возвращает полную информацию о фильтре по его уникальному названию.
+    operationId: getTenderFilterByName
+    parameters:
+      - in: path
+        name: filterName
+        required: true
+        schema:
+          type: string
+    responses:
+      '200':
+        description: Full filter details
+        content:
+          application/json:
+            schema:
+              $ref: "../../models/tender-filters.yaml#/components/schemas/TenderFilterDetailsResponse"
+
+      '401':
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: "../../models/auth.yaml#/components/schemas/ErrorResponse"
+
+      '403':
+        description: Forbidden
+        content:
+          application/json:
+            schema:
+              $ref: "../../models/auth.yaml#/components/schemas/ErrorResponse"
+
+      '404':
+        description: Filter not found
+        content:
+          application/json:
+            schema:
+              $ref: "../../models/auth.yaml#/components/schemas/ErrorResponse"
+
+  put:
+    tags: [TenderFilters]
+    summary: Update tender filter by name
+    description: Обновляет все редактируемые поля фильтра.
+    operationId: updateTenderFilterByName
+    parameters:
+      - in: path
+        name: filterName
+        required: true
+        schema:
+          type: string
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../../models/tender-filters.yaml#/components/schemas/AddTenderFilterRequest"
+    responses:
+      '200':
+        description: Updated filter details
+        content:
+          application/json:
+            schema:
+              $ref: "../../models/tender-filters.yaml#/components/schemas/TenderFilterDetailsResponse"
+
+      '400':
+        description: Invalid request
+        content:
+          application/json:
+            schema:
+              $ref: "../../models/auth.yaml#/components/schemas/ErrorResponse"
+
+      '401':
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: "../../models/auth.yaml#/components/schemas/ErrorResponse"
+
+      '403':
+        description: Forbidden
+        content:
+          application/json:
+            schema:
+              $ref: "../../models/auth.yaml#/components/schemas/ErrorResponse"
+
+      '404':
+        description: Filter not found
+        content:
+          application/json:
+            schema:
+              $ref: "../../models/auth.yaml#/components/schemas/ErrorResponse"
+
+      '409':
+        description: Filter name already exists
+        content:
+          application/json:
+            schema:
+              $ref: "../../models/auth.yaml#/components/schemas/ErrorResponse"
+
+  delete:
+    tags: [TenderFilters]
+    summary: Delete tender filter by name
+    description: Удаляет сохраненный фильтр по его уникальному названию.
+    operationId: deleteTenderFilterByName
+    parameters:
+      - in: path
+        name: filterName
+        required: true
+        schema:
+          type: string
+    responses:
+      '200':
+        description: Filter deleted
+        content:
+          application/json:
+            schema:
+              $ref: "../../models/auth.yaml#/components/schemas/MessageResponse"
+
+      '401':
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: "../../models/auth.yaml#/components/schemas/ErrorResponse"
+
+      '403':
+        description: Forbidden
+        content:
+          application/json:
+            schema:
+              $ref: "../../models/auth.yaml#/components/schemas/ErrorResponse"
+
+      '404':
+        description: Filter not found
         content:
           application/json:
             schema:

@@ -10,4 +10,5 @@ public interface TenderFilterRepository extends JpaRepository<TenderFilter, Long
     Iterable<TenderFilter> findAllByUserId(long userId);
     Optional<TenderFilter> findByName(String name);
     boolean existsByName(String name);
+    boolean existsByNameAndIdNot(String name, Long id);
 }

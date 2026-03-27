@@ -262,3 +262,129 @@ components:
           type: boolean
         foundFromDocuments:
           type: boolean
+
+    TenderFilterSummaryResponse:
+      type: object
+      properties:
+        name:
+          type: string
+        active:
+          type: boolean
+
+    TenderFilterDetailsResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+        userId:
+          type: integer
+          format: int64
+        active:
+          type: boolean
+        text:
+          type: array
+          items:
+            type: string
+        exclude:
+          type: array
+          items:
+            type: string
+        categories:
+          type: array
+          items:
+            type: integer
+            format: int32
+        includeInns:
+          type: array
+          items:
+            type: string
+        excludeInns:
+          type: array
+          items:
+            type: string
+        dateTimeFrom:
+          type: string
+          format: date-time
+        dateTimeTo:
+          type: string
+          format: date-time
+        participantsInns:
+          type: array
+          items:
+            type: string
+        participantsState:
+          type: integer
+          format: int32
+        enableParticipantsFromDocuments:
+          type: boolean
+        regionIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+        purchaseStatuses:
+          type: array
+          items:
+            type: integer
+            format: int32
+        laws:
+          type: array
+          items:
+            type: integer
+            format: int32
+        procedures:
+          type: array
+          items:
+            type: integer
+            format: int32
+        electronicPlaces:
+          type: array
+          items:
+            type: integer
+            format: int32
+        categoryIds:
+          type: array
+          items:
+            type: integer
+            format: int32
+        strictSearch:
+          type: boolean
+        attachments:
+          type: boolean
+        maxPriceFrom:
+          type: integer
+          format: int64
+        maxPriceTo:
+          type: integer
+          format: int64
+        maxPriceNone:
+          type: boolean
+        advance44:
+          type: boolean
+        advance223:
+          type: boolean
+        nonAdvance:
+          type: boolean
+        smp:
+          type: integer
+          format: int32
+        allowForeignCurrency:
+          type: boolean
+        pageNumber:
+          type: integer
+          format: int32
+        applicationDeadlineFrom:
+          type: string
+          format: date-time
+        applicationDeadlineTo:
+          type: string
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time

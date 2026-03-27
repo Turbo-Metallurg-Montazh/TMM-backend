@@ -47,3 +47,6 @@ paths:
 
   /tender-filters/export:
     $ref: "./contracts/tenders/tender-filters.yaml#/tenderFiltersExport"
+
+  /tender-filters/{filterName}:
+    $ref: "./contracts/tenders/tender-filters.yaml#/tenderFilterByName"

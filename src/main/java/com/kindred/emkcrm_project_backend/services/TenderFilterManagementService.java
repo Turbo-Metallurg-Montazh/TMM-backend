@@ -7,17 +7,25 @@ import com.kindred.emkcrm_project_backend.db.entities.User;
 import com.kindred.emkcrm_project_backend.db.repositories.TenderFilterRepository;
 import com.kindred.emkcrm_project_backend.exception.BadRequestException;
 import com.kindred.emkcrm_project_backend.exception.ConflictException;
+import com.kindred.emkcrm_project_backend.exception.NotFoundException;
 import com.kindred.emkcrm_project_backend.exception.UnauthorizedException;
 import com.kindred.emkcrm_project_backend.model.AddTenderFilterRequest;
+import com.kindred.emkcrm_project_backend.model.TenderFilterDetailsResponse;
+import com.kindred.emkcrm_project_backend.model.TenderFilterSummaryResponse;
 import com.kindred.emkcrm_project_backend.utils.json.TenderJsonMapper;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.List;
+import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 public class TenderFilterManagementService {
@@ -52,8 +60,46 @@ public class TenderFilterManagementService {
         return CREATED_MESSAGE;
     }
 
+    @PreAuthorize("hasAuthority('TENDER_FILTER.WRITE')")
+    public List<TenderFilterSummaryResponse> listTenderFilters() {
+        return tenderFilterRepository.findAll(Sort.by(Sort.Direction.ASC, "name")).stream()
+                .map(this::toSummaryResponse)
+                .collect(Collectors.toList());
+    }
+
+    @PreAuthorize("hasAuthority('TENDER_FILTER.WRITE')")
+    public TenderFilterDetailsResponse getTenderFilterByName(String filterName) {
+        return toDetailsResponse(findByName(filterName));
+    }
+
+    @Transactional
+    @PreAuthorize("hasAuthority('TENDER_FILTER.WRITE')")
+    public TenderFilterDetailsResponse updateTenderFilterByName(String filterName, AddTenderFilterRequest request) {
+        validateRequest(request);
+        TenderFilter tenderFilter = findByName(filterName);
+        String updatedName = request.getName().trim();
+
+        ensureNameIsAvailableForUpdate(updatedName, tenderFilter.getId());
+        applyEditableFields(tenderFilter, request, updatedName);
+        return toDetailsResponse(tenderFilterRepository.save(tenderFilter));
+    }
+
+    @Transactional
+    @PreAuthorize("hasAuthority('TENDER_FILTER.WRITE')")
+    public String deleteTenderFilterByName(String filterName) {
+        TenderFilter tenderFilter = findByName(filterName);
+        tenderFilterRepository.delete(tenderFilter);
+        return "Фильтр успешно удален";
+    }
+
     private void ensureNameIsAvailable(String filterName) {
         if (tenderFilterRepository.existsByName(filterName)) {
+            throw new ConflictException(String.format("Фильтр с названием %s уже существует", filterName));
+        }
+    }
+
+    private void ensureNameIsAvailableForUpdate(String filterName, Long filterId) {
+        if (tenderFilterRepository.existsByNameAndIdNot(filterName, filterId)) {
             throw new ConflictException(String.format("Фильтр с названием %s уже существует", filterName));
         }
     }
@@ -73,8 +119,13 @@ public class TenderFilterManagementService {
 
     private TenderFilter toEntity(AddTenderFilterRequest request, Long userId, String filterName) {
         TenderFilter tenderFilter = new TenderFilter();
-        tenderFilter.setName(filterName);
         tenderFilter.setUserId(userId);
+        applyEditableFields(tenderFilter, request, filterName);
+        return tenderFilter;
+    }
+
+    private void applyEditableFields(TenderFilter tenderFilter, AddTenderFilterRequest request, String filterName) {
+        tenderFilter.setName(filterName);
         tenderFilter.setActive(request.getActive() == null || request.getActive());
         tenderFilter.setText(toStringArray(request.getText()));
         tenderFilter.setExclude(toStringArray(request.getExclude()));
@@ -105,7 +156,6 @@ public class TenderFilterManagementService {
         tenderFilter.setPageNumber(request.getPageNumber());
         tenderFilter.setApplicationDeadlineFrom(toInstant(request.getApplicationDeadlineFrom()));
         tenderFilter.setApplicationDeadlineTo(toInstant(request.getApplicationDeadlineTo()));
-        return tenderFilter;
     }
 
     private void validateRequest(AddTenderFilterRequest request) {
@@ -129,6 +179,62 @@ public class TenderFilterManagementService {
                 && request.getApplicationDeadlineFrom().toInstant().isAfter(request.getApplicationDeadlineTo().toInstant())) {
             throw new BadRequestException("applicationDeadlineFrom must be <= applicationDeadlineTo");
         }
+    }
+
+    private TenderFilter findByName(String filterName) {
+        if (filterName == null || filterName.isBlank()) {
+            throw new BadRequestException("filterName is required");
+        }
+        String normalizedFilterName = filterName.trim();
+        return tenderFilterRepository.findByName(normalizedFilterName)
+                .orElseThrow(() -> new NotFoundException("Фильтр не найден: " + normalizedFilterName));
+    }
+
+    private TenderFilterSummaryResponse toSummaryResponse(TenderFilter tenderFilter) {
+        TenderFilterSummaryResponse response = new TenderFilterSummaryResponse();
+        response.setName(tenderFilter.getName());
+        response.setActive(tenderFilter.isActive());
+        return response;
+    }
+
+    private TenderFilterDetailsResponse toDetailsResponse(TenderFilter tenderFilter) {
+        TenderFilterDetailsResponse response = new TenderFilterDetailsResponse();
+        response.setId(tenderFilter.getId());
+        response.setName(tenderFilter.getName());
+        response.setUserId(tenderFilter.getUserId());
+        response.setActive(tenderFilter.isActive());
+        response.setText(toStringList(tenderFilter.getText()));
+        response.setExclude(toStringList(tenderFilter.getExclude()));
+        response.setCategories(toIntegerList(tenderFilter.getCategories()));
+        response.setIncludeInns(toStringList(tenderFilter.getIncludeInns()));
+        response.setExcludeInns(toStringList(tenderFilter.getExcludeInns()));
+        response.setDateTimeFrom(toOffsetDateTime(tenderFilter.getDateTimeFrom()));
+        response.setDateTimeTo(toOffsetDateTime(tenderFilter.getDateTimeTo()));
+        response.setParticipantsInns(toStringList(tenderFilter.getParticipantsInns()));
+        response.setParticipantsState(tenderFilter.getParticipantsState());
+        response.setEnableParticipantsFromDocuments(tenderFilter.getEnableParticipantsFromDocuments());
+        response.setRegionIds(toUuidList(tenderFilter.getRegionIds()));
+        response.setPurchaseStatuses(toIntegerList(tenderFilter.getPurchaseStatuses()));
+        response.setLaws(toIntegerList(tenderFilter.getLaws()));
+        response.setProcedures(toIntegerList(tenderFilter.getProcedures()));
+        response.setElectronicPlaces(toIntegerList(tenderFilter.getElectronicPlaces()));
+        response.setCategoryIds(toIntegerList(tenderFilter.getCategoryIds()));
+        response.setStrictSearch(tenderFilter.getStrictSearch());
+        response.setAttachments(tenderFilter.getAttachments());
+        response.setMaxPriceFrom(tenderFilter.getMaxPriceFrom());
+        response.setMaxPriceTo(tenderFilter.getMaxPriceTo());
+        response.setMaxPriceNone(tenderFilter.getMaxPriceNone());
+        response.setAdvance44(tenderFilter.getAdvance44());
+        response.setAdvance223(tenderFilter.getAdvance223());
+        response.setNonAdvance(tenderFilter.getNonAdvance());
+        response.setSmp(tenderFilter.getSmp());
+        response.setAllowForeignCurrency(tenderFilter.getAllowForeignCurrency());
+        response.setPageNumber(tenderFilter.getPageNumber());
+        response.setApplicationDeadlineFrom(toOffsetDateTime(tenderFilter.getApplicationDeadlineFrom()));
+        response.setApplicationDeadlineTo(toOffsetDateTime(tenderFilter.getApplicationDeadlineTo()));
+        response.setCreatedAt(toOffsetDateTime(tenderFilter.getCreatedAt()));
+        response.setUpdatedAt(toOffsetDateTime(tenderFilter.getUpdatedAt()));
+        return response;
     }
 
     private User currentUser() {
@@ -159,5 +265,30 @@ public class TenderFilterManagementService {
 
     private Instant toInstant(java.time.OffsetDateTime value) {
         return value == null ? null : value.toInstant();
+    }
+
+    private List<String> toStringList(String[] values) {
+        return values == null ? List.of() : List.of(values);
+    }
+
+    private List<Integer> toIntegerList(Integer[] values) {
+        return values == null ? List.of() : List.of(values);
+    }
+
+    private List<UUID> toUuidList(String[] values) {
+        if (values == null) {
+            return List.of();
+        }
+        return java.util.Arrays.stream(values)
+                .map(UUID::fromString)
+                .collect(Collectors.toList());
+    }
+
+    private OffsetDateTime toOffsetDateTime(Instant value) {
+        return value == null ? null : OffsetDateTime.ofInstant(value, ZoneOffset.UTC);
+    }
+
+    private OffsetDateTime toOffsetDateTime(java.time.LocalDateTime value) {
+        return value == null ? null : value.atOffset(ZoneOffset.UTC);
     }
 }
