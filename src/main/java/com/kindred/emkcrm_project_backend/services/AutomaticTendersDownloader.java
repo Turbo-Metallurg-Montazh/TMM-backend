@@ -55,7 +55,7 @@ public class AutomaticTendersDownloader {
                 }
 
                 FoundTendersArray foundTendersArray = findTenders.findTenders(
-                        tenderFilter.getJsonFilter(),
+                        tenderFilter,
                         unloadingDate.getUnloadDate().format(formatter),
                         formattedDateTimeTo,
                         1,

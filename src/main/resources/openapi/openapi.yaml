@@ -41,3 +41,6 @@ paths:
 
   /public-ai/chat:
     $ref: "./contracts/openai/ask-ai.yaml#/ask-open-ai"
+
+  /tender-filters:
+    $ref: "./contracts/tenders/tender-filters.yaml#/tenderFilters"

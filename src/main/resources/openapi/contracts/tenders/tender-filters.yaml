@@ -1,0 +1,54 @@
+tenderFilters:
+  post:
+    tags: [TenderFilters]
+    summary: Add tender filter
+    description: Создает пользовательский фильтр тендеров для дальнейшей автоматической выгрузки.
+    operationId: addTenderFilter
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../../models/tender-filters.yaml#/components/schemas/AddTenderFilterRequest"
+    responses:
+      '201':
+        description: Tender filter created
+        content:
+          application/json:
+            schema:
+              $ref: "../../models/auth.yaml#/components/schemas/MessageResponse"
+
+      '400':
+        description: Invalid request
+        content:
+          application/json:
+            schema:
+              $ref: "../../models/auth.yaml#/components/schemas/ErrorResponse"
+
+      '401':
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: "../../models/auth.yaml#/components/schemas/ErrorResponse"
+
+      '403':
+        description: Forbidden
+        content:
+          application/json:
+            schema:
+              $ref: "../../models/auth.yaml#/components/schemas/ErrorResponse"
+
+      '409':
+        description: Filter with the same parameters already exists for the current user
+        content:
+          application/json:
+            schema:
+              $ref: "../../models/auth.yaml#/components/schemas/ErrorResponse"
+
+      '501':
+        description: Not implemented
+        content:
+          application/json:
+            schema:
+              $ref: "../../models/auth.yaml#/components/schemas/MessageResponse"

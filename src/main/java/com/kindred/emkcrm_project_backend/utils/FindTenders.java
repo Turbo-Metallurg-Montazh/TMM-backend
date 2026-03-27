@@ -2,6 +2,7 @@ package com.kindred.emkcrm_project_backend.utils;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.kindred.emkcrm_project_backend.config.PaginationProperties;
+import com.kindred.emkcrm_project_backend.db.entities.TenderFilter;
 import com.kindred.emkcrm_project_backend.db.repositories.FoundTenderRepository;
 import com.kindred.emkcrm_project_backend.db.entities.foundTendersEntity.FoundTender;
 import com.kindred.emkcrm_project_backend.db.entities.foundTendersEntity.FoundTenders;
@@ -17,6 +18,7 @@ import org.springframework.stereotype.Component;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.Objects;
 
 
 @Slf4j
@@ -40,13 +42,14 @@ public class FindTenders {
     }
 
 
-    public FoundTendersArray findTenders(String jsonFilter, String dateFromInstant, String dateToInstant, int fromPage, int toPage) throws JsonProcessingException {
+    public FoundTendersArray findTenders(TenderFilter tenderFilter, String dateFromInstant, String dateToInstant, int fromPage, int toPage) throws JsonProcessingException {
+        Objects.requireNonNull(tenderFilter, "tenderFilter must not be null");
         validatePages(fromPage, toPage);
         Date fromDate = parseInstant(dateFromInstant, "dateFromInstant");
         Date toDate = parseInstant(dateToInstant, "dateToInstant");
 
         int firstPageIndex = fromPage - 1;
-        String firstPageRequest = tenderJsonMapper.patchSearchPayload(jsonFilter, dateFromInstant, dateToInstant, firstPageIndex);
+        String firstPageRequest = tenderJsonMapper.buildSearchPayload(tenderFilter, dateFromInstant, dateToInstant, firstPageIndex);
         String firstResponse = searchPurchases(firstPageRequest);
 
         FoundTenders foundTenders = tenderJsonMapper.readFoundTenders(firstResponse);
@@ -57,7 +60,7 @@ public class FindTenders {
         int lastPageIndex = Math.min(toPage - 1, maxPageIndex);
 
         for (int pageIndex = firstPageIndex + 1; pageIndex <= lastPageIndex; pageIndex++) {
-            String nextPageRequest = tenderJsonMapper.patchSearchPayload(jsonFilter, dateFromInstant, dateToInstant, pageIndex);
+            String nextPageRequest = tenderJsonMapper.buildSearchPayload(tenderFilter, dateFromInstant, dateToInstant, pageIndex);
             String nextResponse = searchPurchases(nextPageRequest);
             collectedTenders.addAll(safeTenders(tenderJsonMapper.readFoundTenders(nextResponse)));
         }

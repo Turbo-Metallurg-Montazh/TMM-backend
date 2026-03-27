@@ -1,0 +1,144 @@
+components:
+  schemas:
+    AddTenderFilterRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Название фильтра
+        active:
+          type: boolean
+          default: true
+          description: Признак активности фильтра
+        text:
+          type: array
+          items:
+            type: string
+          description: Ключевые слова
+        exclude:
+          type: array
+          items:
+            type: string
+          description: Исключения
+        categories:
+          type: array
+          items:
+            type: integer
+            format: int32
+          description: Отрасль (deprecated во внешнем API)
+          deprecated: true
+        includeInns:
+          type: array
+          items:
+            type: string
+          description: Заказчики для включения
+        excludeInns:
+          type: array
+          items:
+            type: string
+          description: Заказчики для исключения
+        dateTimeFrom:
+          type: string
+          format: date-time
+          description: Опубликовано с
+        dateTimeTo:
+          type: string
+          format: date-time
+          description: Опубликовано до
+        participantsInns:
+          type: array
+          items:
+            type: string
+          description: ИНН участника/победителя/поставщика
+        participantsState:
+          type: integer
+          format: int32
+          description: Статус участника
+        enableParticipantsFromDocuments:
+          type: boolean
+          description: Искать участников, найденных в документации
+        regionIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+          description: Регионы
+        purchaseStatuses:
+          type: array
+          items:
+            type: integer
+            format: int32
+          description: Этапы закупки
+        laws:
+          type: array
+          items:
+            type: integer
+            format: int32
+          description: Типы торгов
+        procedures:
+          type: array
+          items:
+            type: integer
+            format: int32
+          description: Способы отбора
+        electronicPlaces:
+          type: array
+          items:
+            type: integer
+            format: int32
+          description: Электронные площадки
+        categoryIds:
+          type: array
+          items:
+            type: integer
+            format: int32
+          description: Идентификаторы отраслей
+        strictSearch:
+          type: boolean
+          description: Точный поиск
+        attachments:
+          type: boolean
+          description: Поиск по документам
+        maxPriceFrom:
+          type: integer
+          format: int64
+          description: Начальная цена от
+        maxPriceTo:
+          type: integer
+          format: int64
+          description: Начальная цена до
+        maxPriceNone:
+          type: boolean
+          description: Включать закупки без НМЦ
+        advance44:
+          type: boolean
+          description: Аванс по 44-ФЗ
+        advance223:
+          type: boolean
+          description: Аванс по 223-ФЗ
+        nonAdvance:
+          type: boolean
+          description: Без аванса для остальных типов торгов
+        smp:
+          type: integer
+          format: int32
+          description: Признак СМП
+        allowForeignCurrency:
+          type: boolean
+          description: Разрешить иностранную валюту
+        pageNumber:
+          type: integer
+          format: int32
+          description: Номер страницы
+        applicationDeadlineFrom:
+          type: string
+          format: date-time
+          description: Срок подачи заявок с
+        applicationDeadlineTo:
+          type: string
+          format: date-time
+          description: Срок подачи заявок до
+      required:
+        - name
+        - dateTimeFrom
+        - dateTimeTo
