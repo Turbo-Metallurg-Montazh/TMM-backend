@@ -73,6 +73,7 @@ public class FindTenders {
         foundTendersArray.setFromDate(fromDate);
         foundTendersArray.setToDate(toDate);
         foundTendersArray.setTotalPagesCount(foundTenders.getTotalCount(), paginationProperties.items_on_page());
+        foundTendersArray.setLoadedPagesCount(lastPageIndex - firstPageIndex + 1);
 
         foundTenderRepository.saveAll(collectedTenders);
         log.info("Loaded {} tenders from external API for period {} - {}", collectedTenders.size(), dateFromInstant, dateToInstant);

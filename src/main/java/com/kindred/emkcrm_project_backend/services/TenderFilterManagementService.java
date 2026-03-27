@@ -42,12 +42,20 @@ public class TenderFilterManagementService {
     @PreAuthorize("hasAuthority('TENDER_FILTER.WRITE')")
     public String addTenderFilter(AddTenderFilterRequest request) {
         validateRequest(request);
+        String filterName = request.getName().trim();
+        ensureNameIsAvailable(filterName);
 
         User user = currentUser();
         ensureFilterDoesNotExist(user.getId(), request);
 
-        tenderFilterRepository.save(toEntity(request, user.getId()));
+        tenderFilterRepository.save(toEntity(request, user.getId(), filterName));
         return CREATED_MESSAGE;
+    }
+
+    private void ensureNameIsAvailable(String filterName) {
+        if (tenderFilterRepository.existsByName(filterName)) {
+            throw new ConflictException(String.format("Фильтр с названием %s уже существует", filterName));
+        }
     }
 
     private void ensureFilterDoesNotExist(Long userId, AddTenderFilterRequest request) {
@@ -63,9 +71,9 @@ public class TenderFilterManagementService {
         }
     }
 
-    private TenderFilter toEntity(AddTenderFilterRequest request, Long userId) {
+    private TenderFilter toEntity(AddTenderFilterRequest request, Long userId, String filterName) {
         TenderFilter tenderFilter = new TenderFilter();
-        tenderFilter.setName(request.getName().trim());
+        tenderFilter.setName(filterName);
         tenderFilter.setUserId(userId);
         tenderFilter.setActive(request.getActive() == null || request.getActive());
         tenderFilter.setText(toStringArray(request.getText()));

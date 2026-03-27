@@ -142,3 +142,123 @@ components:
         - name
         - dateTimeFrom
         - dateTimeTo
+
+    ExportTendersByFilterRequest:
+      type: object
+      properties:
+        filterName:
+          type: string
+          description: Уникальное название фильтра
+        dateFrom:
+          type: string
+          format: date-time
+          description: Переопределение даты начала выгрузки
+        dateTo:
+          type: string
+          format: date-time
+          description: Переопределение даты окончания выгрузки
+        loadAllPages:
+          type: boolean
+          default: false
+          description: Загружать все страницы до лимита 20
+      required:
+        - filterName
+
+    ExportTendersByFilterResponse:
+      type: object
+      properties:
+        filterName:
+          type: string
+        fromDate:
+          type: string
+          format: date-time
+        toDate:
+          type: string
+          format: date-time
+        tendersDownloadCount:
+          type: integer
+          format: int32
+        totalPagesCount:
+          type: integer
+          format: int32
+        loadedPagesCount:
+          type: integer
+          format: int32
+        foundTenders:
+          $ref: "#/components/schemas/FoundTendersResponse"
+
+    FoundTendersResponse:
+      type: object
+      properties:
+        totalCount:
+          type: integer
+          format: int32
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/FoundTenderResponse"
+
+    FoundTenderResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        notificationNumber:
+          type: string
+        orderName:
+          type: string
+        notificationTypeDesc:
+          type: string
+        typeOfTrading:
+          type: integer
+          format: int32
+        maxPrice:
+          type: number
+          format: double
+        currency:
+          type: string
+        epUri:
+          type: string
+        link:
+          type: string
+        applicationDeadline:
+          type: string
+          format: date-time
+        isCancelled:
+          type: boolean
+        createDate:
+          type: string
+          format: date-time
+        deliveryPlaces:
+          type: array
+          items:
+            type: string
+        inns:
+          type: array
+          items:
+            type: string
+        participants:
+          type: array
+          items:
+            $ref: "#/components/schemas/FoundTenderParticipantResponse"
+        otherInformation:
+          type: string
+        commissionDeadline:
+          type: string
+          format: date-time
+        isAbandoned:
+          type: boolean
+        isPlanning:
+          type: boolean
+
+    FoundTenderParticipantResponse:
+      type: object
+      properties:
+        inn:
+          type: string
+        isWinner:
+          type: boolean
+        isContractor:
+          type: boolean
+        foundFromDocuments:
+          type: boolean

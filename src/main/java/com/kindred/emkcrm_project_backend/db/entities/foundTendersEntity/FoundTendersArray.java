@@ -11,6 +11,7 @@ public class FoundTendersArray {
     private Date toDate;
     private int tendersDownloadCount;
     private int totalPagesCount;
+    private int loadedPagesCount;
     private FoundTenders foundTenders;
 
     public void setTotalPagesCount(int totalTendersCount, int itemsOnPage) {

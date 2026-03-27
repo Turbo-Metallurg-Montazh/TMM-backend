@@ -52,3 +52,58 @@ tenderFilters:
           application/json:
             schema:
               $ref: "../../models/auth.yaml#/components/schemas/MessageResponse"
+
+tenderFiltersExport:
+  post:
+    tags: [TenderFilters]
+    summary: Export tenders by filter
+    description: Выгружает тендеры по выбранному фильтру. При включенном флаге all pages загружает до 20 страниц.
+    operationId: exportTendersByFilter
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../../models/tender-filters.yaml#/components/schemas/ExportTendersByFilterRequest"
+    responses:
+      '200':
+        description: Tenders exported by filter
+        content:
+          application/json:
+            schema:
+              $ref: "../../models/tender-filters.yaml#/components/schemas/ExportTendersByFilterResponse"
+
+      '400':
+        description: Invalid request
+        content:
+          application/json:
+            schema:
+              $ref: "../../models/auth.yaml#/components/schemas/ErrorResponse"
+
+      '401':
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: "../../models/auth.yaml#/components/schemas/ErrorResponse"
+
+      '403':
+        description: Forbidden
+        content:
+          application/json:
+            schema:
+              $ref: "../../models/auth.yaml#/components/schemas/ErrorResponse"
+
+      '404':
+        description: Filter not found
+        content:
+          application/json:
+            schema:
+              $ref: "../../models/auth.yaml#/components/schemas/ErrorResponse"
+
+      '503':
+        description: External API unavailable
+        content:
+          application/json:
+            schema:
+              $ref: "../../models/auth.yaml#/components/schemas/ErrorResponse"
