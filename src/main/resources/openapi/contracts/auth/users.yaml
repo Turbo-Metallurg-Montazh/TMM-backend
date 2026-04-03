@@ -1,0 +1,84 @@
+currentUser:
+  get:
+    tags: [Users]
+    summary: Get current user profile
+    description: Возвращает текущего пользователя из токена.
+    operationId: getCurrentUserProfile
+    responses:
+      '200':
+        description: Current user profile
+        content:
+          application/json:
+            schema:
+              $ref: "../../models/auth.yaml#/components/schemas/UserProfileDto"
+
+      '404':
+        description: User not found
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: "../../models/auth.yaml#/components/schemas/ErrorResponse"
+
+      '501':
+        description: Not implemented
+        content:
+          application/json:
+            schema:
+              title: GetCurrentUserProfile501Response
+              allOf:
+                - $ref: "../../models/auth.yaml#/components/schemas/MessageResponse"
+
+  put:
+    tags: [Users]
+    summary: Update current user profile
+    description: >
+      Обновляет только email, firstName, middleName и lastName текущего пользователя.
+      username, roles, enabled и password через этот endpoint менять нельзя.
+    operationId: updateCurrentUserProfile
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../../models/auth.yaml#/components/schemas/UpdateCurrentUserRequest"
+    responses:
+      '200':
+        description: Updated current user profile
+        content:
+          application/json:
+            schema:
+              $ref: "../../models/auth.yaml#/components/schemas/UserProfileDto"
+
+      '400':
+        description: Invalid data
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: "../../models/auth.yaml#/components/schemas/ErrorResponse"
+
+      '404':
+        description: User not found
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: "../../models/auth.yaml#/components/schemas/ErrorResponse"
+
+      '409':
+        description: Email already taken
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: "../../models/auth.yaml#/components/schemas/ErrorResponse"
+
+      '501':
+        description: Not implemented
+        content:
+          application/json:
+            schema:
+              title: UpdateCurrentUserProfile501Response
+              allOf:
+                - $ref: "../../models/auth.yaml#/components/schemas/MessageResponse"

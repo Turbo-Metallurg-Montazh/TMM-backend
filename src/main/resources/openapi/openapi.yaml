@@ -27,6 +27,9 @@ paths:
   /admin/users/{username}/enabled:
     $ref: "./contracts/auth/admin-users.yaml#/adminUserEnabled"
 
+  /users/me:
+    $ref: "./contracts/auth/users.yaml#/currentUser"
+
   /admin/roles:
     $ref: "./contracts/auth/rbac-admin.yaml#/adminRoles"
 

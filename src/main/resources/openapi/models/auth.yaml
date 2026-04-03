@@ -64,6 +64,31 @@ components:
           type: boolean
       required: [firstName, lastName, enabled]
 
+    UserProfileDto:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        username:
+          type: string
+        email:
+          type: string
+          format: email
+        roles:
+          type: array
+          items:
+            type: string
+        firstName:
+          type: string
+        middleName:
+          type: string
+        lastName:
+          type: string
+        enabled:
+          type: boolean
+      required: [id, username, email, roles, firstName, lastName, enabled]
+
     AdminCreateUserRequest:
       type: object
       properties:
@@ -146,3 +171,18 @@ components:
         enabled:
           type: boolean
       required: [enabled]
+
+    UpdateCurrentUserRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+        firstName:
+          type: string
+        middleName:
+          type: string
+          nullable: true
+        lastName:
+          type: string
+      required: [email, firstName, lastName]
