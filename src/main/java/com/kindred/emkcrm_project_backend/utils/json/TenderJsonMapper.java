@@ -62,12 +62,12 @@ public class TenderJsonMapper {
 
     public String serializeFilter(AddTenderFilterRequest request) throws JsonProcessingException {
         Objects.requireNonNull(request, "request must not be null");
-        return nonNullWriter.writeValueAsString(buildSearchPayloadNode(snapshot(request)));
+        return nonNullWriter.writeValueAsString(buildComparablePayloadNode(snapshot(request)));
     }
 
     public String serializeFilter(TenderFilter tenderFilter) throws JsonProcessingException {
         Objects.requireNonNull(tenderFilter, "tenderFilter must not be null");
-        return nonNullWriter.writeValueAsString(buildSearchPayloadNode(snapshot(tenderFilter)));
+        return nonNullWriter.writeValueAsString(buildComparablePayloadNode(snapshot(tenderFilter)));
     }
 
     public String buildSearchPayload(TenderFilter tenderFilter, String dateFromInstant, String dateToInstant, int pageNumber)
@@ -189,6 +189,15 @@ public class TenderJsonMapper {
         return payload;
     }
 
+    private ObjectNode buildComparablePayloadNode(SearchArgsSnapshot snapshot) {
+        ObjectNode payload = buildSearchPayloadNode(snapshot);
+        putInteger(payload, "SortOrder", snapshot.sortOrder());
+        putString(payload, "ApplicationDeadlineType", snapshot.applicationDeadlineType());
+        putIntegerArray(payload, "IncludedRequirementIds", snapshot.includedRequirementIds());
+        putIntegerArray(payload, "ExcludedRequirementIds", snapshot.excludedRequirementIds());
+        return payload;
+    }
+
     private SearchArgsSnapshot snapshot(AddTenderFilterRequest request) {
         return new SearchArgsSnapshot(
                 toStringArray(request.getText()),
@@ -219,7 +228,11 @@ public class TenderJsonMapper {
                 request.getAllowForeignCurrency(),
                 request.getPageNumber(),
                 toInstant(request.getApplicationDeadlineFrom()),
-                toInstant(request.getApplicationDeadlineTo())
+                toInstant(request.getApplicationDeadlineTo()),
+                request.getSortOrder(),
+                request.getApplicationDeadlineType(),
+                toIntegerArray(request.getIncludedRequirementIds()),
+                toIntegerArray(request.getExcludedRequirementIds())
         );
     }
 
@@ -253,7 +266,11 @@ public class TenderJsonMapper {
                 tenderFilter.getAllowForeignCurrency(),
                 tenderFilter.getPageNumber(),
                 tenderFilter.getApplicationDeadlineFrom(),
-                tenderFilter.getApplicationDeadlineTo()
+                tenderFilter.getApplicationDeadlineTo(),
+                tenderFilter.getSortOrder(),
+                tenderFilter.getApplicationDeadlineType(),
+                tenderFilter.getIncludedRequirementIds(),
+                tenderFilter.getExcludedRequirementIds()
         );
     }
 
@@ -299,6 +316,12 @@ public class TenderJsonMapper {
         }
     }
 
+    private void putString(ObjectNode payload, String fieldName, String value) {
+        if (value != null) {
+            payload.put(fieldName, value);
+        }
+    }
+
     private void putInstant(ObjectNode payload, String fieldName, Instant value) {
         if (value != null) {
             payload.put(fieldName, value.toString());
@@ -306,7 +329,7 @@ public class TenderJsonMapper {
     }
 
     private String[] toStringArray(List<?> values) {
-        if (values == null) {
+        if (values == null || values.isEmpty()) {
             return null;
         }
         return values.stream()
@@ -315,7 +338,7 @@ public class TenderJsonMapper {
     }
 
     private Integer[] toIntegerArray(List<Integer> values) {
-        return values == null ? null : values.toArray(Integer[]::new);
+        return values == null || values.isEmpty() ? null : values.toArray(Integer[]::new);
     }
 
     private Instant toInstant(OffsetDateTime value) {
@@ -351,7 +374,11 @@ public class TenderJsonMapper {
             Boolean allowForeignCurrency,
             Integer pageNumber,
             Instant applicationDeadlineFrom,
-            Instant applicationDeadlineTo
+            Instant applicationDeadlineTo,
+            Integer sortOrder,
+            String applicationDeadlineType,
+            Integer[] includedRequirementIds,
+            Integer[] excludedRequirementIds
     ) {
     }
 }

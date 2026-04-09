@@ -17,6 +17,7 @@ import com.kindred.emkcrm_project_backend.utils.FindTenders;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 
+import java.time.Clock;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
@@ -33,13 +34,16 @@ public class TenderFilterExportService {
 
     private final TenderFilterRepository tenderFilterRepository;
     private final FindTenders findTenders;
+    private final Clock clock;
 
     public TenderFilterExportService(
             TenderFilterRepository tenderFilterRepository,
-            FindTenders findTenders
+            FindTenders findTenders,
+            Clock clock
     ) {
         this.tenderFilterRepository = tenderFilterRepository;
         this.findTenders = findTenders;
+        this.clock = clock;
     }
 
     @PreAuthorize("hasAuthority('TENDER_FILTER.WRITE')")
@@ -50,8 +54,12 @@ public class TenderFilterExportService {
         TenderFilter tenderFilter = tenderFilterRepository.findByName(filterName)
                 .orElseThrow(() -> new NotFoundException("Фильтр не найден: " + filterName));
 
-        Instant dateFrom = request.getDateFrom() == null ? tenderFilter.getDateTimeFrom() : request.getDateFrom().toInstant();
-        Instant dateTo = request.getDateTo() == null ? tenderFilter.getDateTimeTo() : request.getDateTo().toInstant();
+        SearchRange searchRange = resolveSearchRange(
+                request.getDateFrom() == null ? tenderFilter.getDateTimeFrom() : request.getDateFrom().toInstant(),
+                request.getDateTo() == null ? tenderFilter.getDateTimeTo() : request.getDateTo().toInstant()
+        );
+        Instant dateFrom = searchRange.dateFrom();
+        Instant dateTo = searchRange.dateTo();
         if (dateFrom.isAfter(dateTo)) {
             throw new BadRequestException("dateFrom must be <= dateTo");
         }
@@ -79,6 +87,14 @@ public class TenderFilterExportService {
         if (request.getFilterName() == null || request.getFilterName().isBlank()) {
             throw new BadRequestException("filterName is required");
         }
+    }
+
+    SearchRange resolveSearchRange(Instant dateFrom, Instant dateTo) {
+        Instant resolvedDateTo = dateTo == null ? Instant.now(clock) : dateTo;
+        Instant resolvedDateFrom = dateFrom == null
+                ? OffsetDateTime.ofInstant(resolvedDateTo, ZoneOffset.UTC).minusYears(1).toInstant()
+                : dateFrom;
+        return new SearchRange(resolvedDateFrom, resolvedDateTo);
     }
 
     private ExportTendersByFilterResponse toResponse(String filterName, FoundTendersArray exportedTenders) {
@@ -157,5 +173,11 @@ public class TenderFilterExportService {
 
     private OffsetDateTime toOffsetDateTime(Date value) {
         return value == null ? null : OffsetDateTime.ofInstant(value.toInstant(), ZoneOffset.UTC);
+    }
+
+    record SearchRange(
+            Instant dateFrom,
+            Instant dateTo
+    ) {
     }
 }

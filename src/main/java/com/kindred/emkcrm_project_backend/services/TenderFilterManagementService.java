@@ -10,6 +10,7 @@ import com.kindred.emkcrm_project_backend.exception.ConflictException;
 import com.kindred.emkcrm_project_backend.exception.NotFoundException;
 import com.kindred.emkcrm_project_backend.exception.UnauthorizedException;
 import com.kindred.emkcrm_project_backend.model.AddTenderFilterRequest;
+import com.kindred.emkcrm_project_backend.model.ParseTenderFilterRequest;
 import com.kindred.emkcrm_project_backend.model.TenderFilterDetailsResponse;
 import com.kindred.emkcrm_project_backend.model.TenderFilterSummaryResponse;
 import com.kindred.emkcrm_project_backend.utils.json.TenderJsonMapper;
@@ -35,15 +36,18 @@ public class TenderFilterManagementService {
     private final TenderFilterRepository tenderFilterRepository;
     private final TenderJsonMapper tenderJsonMapper;
     private final UserService userService;
+    private final TenderFilterUrlParser tenderFilterUrlParser;
 
     public TenderFilterManagementService(
             TenderFilterRepository tenderFilterRepository,
             TenderJsonMapper tenderJsonMapper,
-            UserService userService
+            UserService userService,
+            TenderFilterUrlParser tenderFilterUrlParser
     ) {
         this.tenderFilterRepository = tenderFilterRepository;
         this.tenderJsonMapper = tenderJsonMapper;
         this.userService = userService;
+        this.tenderFilterUrlParser = tenderFilterUrlParser;
     }
 
     @Transactional
@@ -58,6 +62,25 @@ public class TenderFilterManagementService {
 
         tenderFilterRepository.save(toEntity(request, user.getId(), filterName));
         return CREATED_MESSAGE;
+    }
+
+    @Transactional
+    @PreAuthorize("hasAuthority('TENDER_FILTER.WRITE')")
+    public String parseTenderFilter(ParseTenderFilterRequest request) {
+        validateParseRequest(request);
+
+        TenderFilterUrlParser.ParsedTenderFilter parsedTenderFilter = tenderFilterUrlParser.parse(request.getFilter());
+        AddTenderFilterRequest parsedRequest = parsedTenderFilter.request();
+        String filterName = tenderFilterUrlParser.resolveFilterName(request.getName(), parsedTenderFilter.rawText());
+        parsedRequest.setName(filterName);
+
+        ensureNameIsAvailable(filterName);
+
+        User user = currentUser();
+        ensureFilterDoesNotExist(user.getId(), parsedRequest);
+
+        tenderFilterRepository.save(toEntity(parsedRequest, user.getId(), filterName));
+        return filterName;
     }
 
     @PreAuthorize("hasAuthority('TENDER_FILTER.WRITE')")
@@ -105,8 +128,13 @@ public class TenderFilterManagementService {
     }
 
     private void ensureFilterDoesNotExist(Long userId, AddTenderFilterRequest request) {
+        TenderFilter candidateFilter = toEntity(request, userId, request.getName() == null ? "" : request.getName());
+        ensureFilterDoesNotExist(userId, candidateFilter);
+    }
+
+    private void ensureFilterDoesNotExist(Long userId, TenderFilter candidateFilter) {
         try {
-            String requestedFilter = tenderJsonMapper.serializeFilter(request);
+            String requestedFilter = tenderJsonMapper.serializeFilter(candidateFilter);
             for (TenderFilter existingFilter : tenderFilterRepository.findAllByUserId(userId)) {
                 if (tenderJsonMapper.serializeFilter(existingFilter).equals(requestedFilter)) {
                     throw new ConflictException(String.format("Фильтр уже существует под названием %s", existingFilter.getName()));
@@ -132,8 +160,8 @@ public class TenderFilterManagementService {
         tenderFilter.setCategories(toIntegerArray(request.getCategories()));
         tenderFilter.setIncludeInns(toStringArray(request.getIncludeInns()));
         tenderFilter.setExcludeInns(toStringArray(request.getExcludeInns()));
-        tenderFilter.setDateTimeFrom(request.getDateTimeFrom().toInstant());
-        tenderFilter.setDateTimeTo(request.getDateTimeTo().toInstant());
+        tenderFilter.setDateTimeFrom(toInstant(request.getDateTimeFrom()));
+        tenderFilter.setDateTimeTo(toInstant(request.getDateTimeTo()));
         tenderFilter.setParticipantsInns(toStringArray(request.getParticipantsInns()));
         tenderFilter.setParticipantsState(request.getParticipantsState());
         tenderFilter.setEnableParticipantsFromDocuments(request.getEnableParticipantsFromDocuments());
@@ -154,8 +182,12 @@ public class TenderFilterManagementService {
         tenderFilter.setSmp(request.getSmp());
         tenderFilter.setAllowForeignCurrency(request.getAllowForeignCurrency());
         tenderFilter.setPageNumber(request.getPageNumber());
+        tenderFilter.setSortOrder(request.getSortOrder());
         tenderFilter.setApplicationDeadlineFrom(toInstant(request.getApplicationDeadlineFrom()));
         tenderFilter.setApplicationDeadlineTo(toInstant(request.getApplicationDeadlineTo()));
+        tenderFilter.setApplicationDeadlineType(request.getApplicationDeadlineType());
+        tenderFilter.setIncludedRequirementIds(toIntegerArray(request.getIncludedRequirementIds()));
+        tenderFilter.setExcludedRequirementIds(toIntegerArray(request.getExcludedRequirementIds()));
     }
 
     private void validateRequest(AddTenderFilterRequest request) {
@@ -165,19 +197,24 @@ public class TenderFilterManagementService {
         if (request.getName() == null || request.getName().isBlank()) {
             throw new BadRequestException("name is required");
         }
-        if (request.getDateTimeFrom() == null) {
-            throw new BadRequestException("dateTimeFrom is required");
-        }
-        if (request.getDateTimeTo() == null) {
-            throw new BadRequestException("dateTimeTo is required");
-        }
-        if (request.getDateTimeFrom().toInstant().isAfter(request.getDateTimeTo().toInstant())) {
+        if (request.getDateTimeFrom() != null
+                && request.getDateTimeTo() != null
+                && request.getDateTimeFrom().toInstant().isAfter(request.getDateTimeTo().toInstant())) {
             throw new BadRequestException("dateTimeFrom must be <= dateTimeTo");
         }
         if (request.getApplicationDeadlineFrom() != null
                 && request.getApplicationDeadlineTo() != null
                 && request.getApplicationDeadlineFrom().toInstant().isAfter(request.getApplicationDeadlineTo().toInstant())) {
             throw new BadRequestException("applicationDeadlineFrom must be <= applicationDeadlineTo");
+        }
+    }
+
+    private void validateParseRequest(ParseTenderFilterRequest request) {
+        if (request == null) {
+            throw new BadRequestException("request must not be null");
+        }
+        if (request.getFilter() == null || request.getFilter().isBlank()) {
+            throw new BadRequestException("filter is required");
         }
     }
 
@@ -230,8 +267,12 @@ public class TenderFilterManagementService {
         response.setSmp(tenderFilter.getSmp());
         response.setAllowForeignCurrency(tenderFilter.getAllowForeignCurrency());
         response.setPageNumber(tenderFilter.getPageNumber());
+        response.setSortOrder(tenderFilter.getSortOrder());
         response.setApplicationDeadlineFrom(toOffsetDateTime(tenderFilter.getApplicationDeadlineFrom()));
         response.setApplicationDeadlineTo(toOffsetDateTime(tenderFilter.getApplicationDeadlineTo()));
+        response.setApplicationDeadlineType(tenderFilter.getApplicationDeadlineType());
+        response.setIncludedRequirementIds(toIntegerList(tenderFilter.getIncludedRequirementIds()));
+        response.setExcludedRequirementIds(toIntegerList(tenderFilter.getExcludedRequirementIds()));
         response.setCreatedAt(toOffsetDateTime(tenderFilter.getCreatedAt()));
         response.setUpdatedAt(toOffsetDateTime(tenderFilter.getUpdatedAt()));
         return response;
@@ -251,7 +292,7 @@ public class TenderFilterManagementService {
     }
 
     private String[] toStringArray(List<?> values) {
-        if (values == null) {
+        if (values == null || values.isEmpty()) {
             return null;
         }
         return values.stream()
@@ -260,7 +301,7 @@ public class TenderFilterManagementService {
     }
 
     private Integer[] toIntegerArray(List<Integer> values) {
-        return values == null ? null : values.toArray(Integer[]::new);
+        return values == null || values.isEmpty() ? null : values.toArray(Integer[]::new);
     }
 
     private Instant toInstant(java.time.OffsetDateTime value) {
@@ -268,16 +309,16 @@ public class TenderFilterManagementService {
     }
 
     private List<String> toStringList(String[] values) {
-        return values == null ? List.of() : List.of(values);
+        return values == null ? null : List.of(values);
     }
 
     private List<Integer> toIntegerList(Integer[] values) {
-        return values == null ? List.of() : List.of(values);
+        return values == null ? null : List.of(values);
     }
 
     private List<UUID> toUuidList(String[] values) {
         if (values == null) {
-            return List.of();
+            return null;
         }
         return java.util.Arrays.stream(values)
                 .map(UUID::fromString)

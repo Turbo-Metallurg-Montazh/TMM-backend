@@ -48,6 +48,9 @@ paths:
   /tender-filters:
     $ref: "./contracts/tenders/tender-filters.yaml#/tenderFilters"
 
+  /tender-filters/parse:
+    $ref: "./contracts/tenders/tender-filters.yaml#/tenderFiltersParse"
+
   /tender-filters/export:
     $ref: "./contracts/tenders/tender-filters.yaml#/tenderFiltersExport"
 

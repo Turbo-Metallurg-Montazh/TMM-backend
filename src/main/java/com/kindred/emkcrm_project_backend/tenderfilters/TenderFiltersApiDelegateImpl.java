@@ -5,6 +5,8 @@ import com.kindred.emkcrm_project_backend.model.AddTenderFilterRequest;
 import com.kindred.emkcrm_project_backend.model.ExportTendersByFilterRequest;
 import com.kindred.emkcrm_project_backend.model.ExportTendersByFilterResponse;
 import com.kindred.emkcrm_project_backend.model.MessageResponse;
+import com.kindred.emkcrm_project_backend.model.ParseTenderFilterRequest;
+import com.kindred.emkcrm_project_backend.model.ParseTenderFilterResponse;
 import com.kindred.emkcrm_project_backend.model.TenderFilterDetailsResponse;
 import com.kindred.emkcrm_project_backend.model.TenderFilterSummaryResponse;
 import com.kindred.emkcrm_project_backend.services.TenderFilterExportService;
@@ -33,6 +35,13 @@ public class TenderFiltersApiDelegateImpl implements TenderFiltersApiDelegate {
     public ResponseEntity<MessageResponse> addTenderFilter(AddTenderFilterRequest addTenderFilterRequest) {
         MessageResponse response = new MessageResponse();
         response.setMessage(tenderFilterManagementService.addTenderFilter(addTenderFilterRequest));
+        return new ResponseEntity<>(response, HttpStatus.CREATED);
+    }
+
+    @Override
+    public ResponseEntity<ParseTenderFilterResponse> parseTenderFilter(ParseTenderFilterRequest parseTenderFilterRequest) {
+        ParseTenderFilterResponse response = new ParseTenderFilterResponse();
+        response.setName(tenderFilterManagementService.parseTenderFilter(parseTenderFilterRequest));
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 

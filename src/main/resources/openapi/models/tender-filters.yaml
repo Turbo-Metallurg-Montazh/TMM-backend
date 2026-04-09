@@ -40,11 +40,11 @@ components:
         dateTimeFrom:
           type: string
           format: date-time
-          description: Опубликовано с
+          description: Опубликовано с. Может быть null.
         dateTimeTo:
           type: string
           format: date-time
-          description: Опубликовано до
+          description: Опубликовано до. Может быть null.
         participantsInns:
           type: array
           items:
@@ -130,6 +130,10 @@ components:
           type: integer
           format: int32
           description: Номер страницы
+        sortOrder:
+          type: integer
+          format: int32
+          description: Порядок сортировки из веб-фильтра Контур.Закупок
         applicationDeadlineFrom:
           type: string
           format: date-time
@@ -138,10 +142,44 @@ components:
           type: string
           format: date-time
           description: Срок подачи заявок до
+        applicationDeadlineType:
+          type: string
+          description: Тип фильтра по сроку подачи заявок из веб-версии
+        includedRequirementIds:
+          type: array
+          items:
+            type: integer
+            format: int32
+          description: Идентификаторы включенных требований
+        excludedRequirementIds:
+          type: array
+          items:
+            type: integer
+            format: int32
+          description: Идентификаторы исключенных требований
       required:
         - name
-        - dateTimeFrom
-        - dateTimeTo
+
+    ParseTenderFilterRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Название фильтра. Если пустое, будет сгенерировано автоматически.
+        filter:
+          type: string
+          description: Полная ссылка или query-строка фильтра из веб-версии Контур.Закупок
+      required:
+        - filter
+
+    ParseTenderFilterResponse:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Итоговое сохраненное название фильтра
+      required:
+        - name
 
     ExportTendersByFilterRequest:
       type: object
@@ -376,12 +414,27 @@ components:
         pageNumber:
           type: integer
           format: int32
+        sortOrder:
+          type: integer
+          format: int32
         applicationDeadlineFrom:
           type: string
           format: date-time
         applicationDeadlineTo:
           type: string
           format: date-time
+        applicationDeadlineType:
+          type: string
+        includedRequirementIds:
+          type: array
+          items:
+            type: integer
+            format: int32
+        excludedRequirementIds:
+          type: array
+          items:
+            type: integer
+            format: int32
         createdAt:
           type: string
           format: date-time

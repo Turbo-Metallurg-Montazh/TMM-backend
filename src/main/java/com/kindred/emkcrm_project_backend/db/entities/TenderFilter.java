@@ -60,10 +60,10 @@ public class TenderFilter extends AuditableEntity {
     @Column(name = "exclude_inns", columnDefinition = "TEXT[]")
     private String[] excludeInns;
 
-    @Column(name = "date_time_from", nullable = false)
+    @Column(name = "date_time_from")
     private Instant dateTimeFrom;
 
-    @Column(name = "date_time_to", nullable = false)
+    @Column(name = "date_time_to")
     private Instant dateTimeTo;
 
     @JdbcTypeCode(SqlTypes.ARRAY)
@@ -133,9 +133,23 @@ public class TenderFilter extends AuditableEntity {
     @Column(name = "page_number")
     private Integer pageNumber;
 
+    @Column(name = "sort_order")
+    private Integer sortOrder;
+
     @Column(name = "application_deadline_from")
     private Instant applicationDeadlineFrom;
 
     @Column(name = "application_deadline_to")
     private Instant applicationDeadlineTo;
+
+    @Column(name = "application_deadline_type")
+    private String applicationDeadlineType;
+
+    @JdbcTypeCode(SqlTypes.ARRAY)
+    @Column(name = "included_requirement_ids", columnDefinition = "INTEGER[]")
+    private Integer[] includedRequirementIds;
+
+    @JdbcTypeCode(SqlTypes.ARRAY)
+    @Column(name = "excluded_requirement_ids", columnDefinition = "INTEGER[]")
+    private Integer[] excludedRequirementIds;
 }

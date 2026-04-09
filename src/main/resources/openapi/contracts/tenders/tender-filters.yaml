@@ -82,6 +82,54 @@ tenderFilters:
             schema:
               $ref: "../../models/auth.yaml#/components/schemas/MessageResponse"
 
+tenderFiltersParse:
+  post:
+    tags: [TenderFilters]
+    summary: Parse tender filter from Kontur URL
+    description: Парсит строку фильтра из веб-версии Контур.Закупок, сохраняет фильтр в БД и возвращает итоговое название.
+    operationId: parseTenderFilter
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../../models/tender-filters.yaml#/components/schemas/ParseTenderFilterRequest"
+    responses:
+      '201':
+        description: Parsed tender filter created
+        content:
+          application/json:
+            schema:
+              $ref: "../../models/tender-filters.yaml#/components/schemas/ParseTenderFilterResponse"
+
+      '400':
+        description: Invalid request
+        content:
+          application/json:
+            schema:
+              $ref: "../../models/auth.yaml#/components/schemas/ErrorResponse"
+
+      '401':
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: "../../models/auth.yaml#/components/schemas/ErrorResponse"
+
+      '403':
+        description: Forbidden
+        content:
+          application/json:
+            schema:
+              $ref: "../../models/auth.yaml#/components/schemas/ErrorResponse"
+
+      '409':
+        description: Filter with the same name or parameters already exists
+        content:
+          application/json:
+            schema:
+              $ref: "../../models/auth.yaml#/components/schemas/ErrorResponse"
+
 tenderFiltersExport:
   post:
     tags: [TenderFilters]
