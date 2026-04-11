@@ -20,7 +20,6 @@ import com.kindred.emkcrm_project_backend.tenderfilters.TenderFiltersApiDelegate
 import jakarta.servlet.Filter;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringBootConfiguration;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -31,6 +30,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.test.context.TestConstructor;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
@@ -53,18 +53,16 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
         webEnvironment = SpringBootTest.WebEnvironment.MOCK,
         properties = "security.jwt.token.secret-key=12345678901234567890123456789012"
 )
+@TestConstructor(autowireMode = TestConstructor.AutowireMode.ALL)
 class TenderFiltersApiIntegrationTest {
 
     private MockMvc mockMvc;
 
-    @Autowired
-    private ObjectMapper objectMapper;
+    private final ObjectMapper objectMapper;
 
-    @Autowired
-    private JwtTokenProvider jwtTokenProvider;
+    private final JwtTokenProvider jwtTokenProvider;
 
-    @Autowired
-    private WebApplicationContext webApplicationContext;
+    private final WebApplicationContext webApplicationContext;
 
     @MockitoBean
     private TenderFilterManagementService tenderFilterManagementService;
@@ -74,6 +72,16 @@ class TenderFiltersApiIntegrationTest {
 
     @MockitoBean
     private UserDetail userDetail;
+
+    TenderFiltersApiIntegrationTest(
+            ObjectMapper objectMapper,
+            JwtTokenProvider jwtTokenProvider,
+            WebApplicationContext webApplicationContext
+    ) {
+        this.objectMapper = objectMapper;
+        this.jwtTokenProvider = jwtTokenProvider;
+        this.webApplicationContext = webApplicationContext;
+    }
 
     @BeforeEach
     void setUp() {

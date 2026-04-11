@@ -29,7 +29,10 @@ public class SecurityConfig{
     }
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) {
+    public SecurityFilterChain securityFilterChain(
+            HttpSecurity http,
+            JwtAuthenticationFilter jwtAuthenticationFilter
+    ) {
         http
                 .csrf(AbstractHttpConfigurer::disable)  // Use the new way to disable CSRF
                 .cors(cors -> cors.configurationSource(request -> {
@@ -62,14 +65,14 @@ public class SecurityConfig{
                 )
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // No session management
-                .addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
 
     @Bean
-    public JwtAuthenticationFilter jwtAuthenticationFilter() {
-        return new JwtAuthenticationFilter(myUserDetailsService);
+    public JwtAuthenticationFilter jwtAuthenticationFilter(JwtTokenProvider tokenProvider) {
+        return new JwtAuthenticationFilter(myUserDetailsService, tokenProvider);
     }
 
     @Bean

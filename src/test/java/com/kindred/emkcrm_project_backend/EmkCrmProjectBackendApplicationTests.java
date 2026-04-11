@@ -1,10 +1,10 @@
 package com.kindred.emkcrm_project_backend;
 
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.TestConstructor;
 import org.springframework.test.context.TestPropertySource;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
@@ -16,6 +16,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @Testcontainers
 @ActiveProfiles("test")
+@TestConstructor(autowireMode = TestConstructor.AutowireMode.ALL)
 @SpringBootTest(
         classes = EmkCrmProjectBackendApplication.class,
         webEnvironment = SpringBootTest.WebEnvironment.NONE
@@ -33,8 +34,11 @@ class EmkCrmProjectBackendApplicationTests {
             .withUsername("emk_crm")
             .withPassword("emk_crm");
 
-    @Autowired
-    private DataSource dataSource;
+    private final DataSource dataSource;
+
+    EmkCrmProjectBackendApplicationTests(DataSource dataSource) {
+        this.dataSource = dataSource;
+    }
 
     @Test
     void contextLoads() {
