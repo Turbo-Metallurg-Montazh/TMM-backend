@@ -1,0 +1,470 @@
+legalCounterparties:
+  get:
+    tags: [LegalCounterparties]
+    summary: Search legal counterparty registry
+    description: Поиск по реестру контрагентов и поставщиков юридического отдела.
+    operationId: searchLegalCounterparties
+    parameters:
+      - in: query
+        name: query
+        required: false
+        schema:
+          type: string
+        description: Поиск по названию, ИНН, КПП или ОГРН.
+      - in: query
+        name: registryType
+        required: false
+        schema:
+          type: string
+        description: CUSTOMER, SUPPLIER или BOTH.
+      - in: query
+        name: riskLevel
+        required: false
+        schema:
+          type: string
+        description: UNKNOWN, LOW, MEDIUM, HIGH или CRITICAL.
+      - in: query
+        name: workProhibited
+        required: false
+        schema:
+          type: boolean
+        description: Фильтр по флагу "категорически нельзя работать".
+      - in: query
+        name: page
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 0
+          minimum: 0
+      - in: query
+        name: size
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 20
+          minimum: 1
+          maximum: 100
+    responses:
+      '200':
+        description: Registry page
+        content:
+          application/json:
+            schema:
+              $ref: "../../models/legal-counterparties.yaml#/components/schemas/LegalCounterpartyPageResponse"
+      '401':
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: "../../models/auth.yaml#/components/schemas/ErrorResponse"
+      '403':
+        description: Forbidden
+        content:
+          application/json:
+            schema:
+              $ref: "../../models/auth.yaml#/components/schemas/ErrorResponse"
+
+  post:
+    tags: [LegalCounterparties]
+    summary: Create legal counterparty
+    description: Создает запись компании в юридическом реестре.
+    operationId: createLegalCounterparty
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../../models/legal-counterparties.yaml#/components/schemas/LegalCounterpartyUpsertRequest"
+    responses:
+      '201':
+        description: Counterparty created
+        content:
+          application/json:
+            schema:
+              $ref: "../../models/legal-counterparties.yaml#/components/schemas/LegalCounterpartyDetailsResponse"
+      '400':
+        description: Invalid request
+        content:
+          application/json:
+            schema:
+              $ref: "../../models/auth.yaml#/components/schemas/ErrorResponse"
+      '401':
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: "../../models/auth.yaml#/components/schemas/ErrorResponse"
+      '403':
+        description: Forbidden
+        content:
+          application/json:
+            schema:
+              $ref: "../../models/auth.yaml#/components/schemas/ErrorResponse"
+      '409':
+        description: Counterparty with the same INN already exists
+        content:
+          application/json:
+            schema:
+              $ref: "../../models/auth.yaml#/components/schemas/ErrorResponse"
+
+legalCounterpartyAssessment:
+  get:
+    tags: [LegalCounterparties]
+    summary: Get counterparty assessment by INN
+    description: Возвращает компактную юридическую оценку компании для использования при расчете коммерческого предложения.
+    operationId: getLegalCounterpartyAssessment
+    parameters:
+      - in: query
+        name: inn
+        required: true
+        schema:
+          type: string
+        description: ИНН компании.
+    responses:
+      '200':
+        description: Counterparty assessment
+        content:
+          application/json:
+            schema:
+              $ref: "../../models/legal-counterparties.yaml#/components/schemas/LegalCounterpartyAssessmentResponse"
+      '400':
+        description: Invalid request
+        content:
+          application/json:
+            schema:
+              $ref: "../../models/auth.yaml#/components/schemas/ErrorResponse"
+      '401':
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: "../../models/auth.yaml#/components/schemas/ErrorResponse"
+      '403':
+        description: Forbidden
+        content:
+          application/json:
+            schema:
+              $ref: "../../models/auth.yaml#/components/schemas/ErrorResponse"
+      '404':
+        description: Counterparty not found
+        content:
+          application/json:
+            schema:
+              $ref: "../../models/auth.yaml#/components/schemas/ErrorResponse"
+
+legalCounterpartyById:
+  get:
+    tags: [LegalCounterparties]
+    summary: Get legal counterparty details
+    description: Возвращает карточку компании вместе с историей проверок, инцидентами и ссылками на тендеры.
+    operationId: getLegalCounterpartyById
+    parameters:
+      - in: path
+        name: counterpartyId
+        required: true
+        schema:
+          type: integer
+          format: int64
+    responses:
+      '200':
+        description: Counterparty details
+        content:
+          application/json:
+            schema:
+              $ref: "../../models/legal-counterparties.yaml#/components/schemas/LegalCounterpartyDetailsResponse"
+      '401':
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: "../../models/auth.yaml#/components/schemas/ErrorResponse"
+      '403':
+        description: Forbidden
+        content:
+          application/json:
+            schema:
+              $ref: "../../models/auth.yaml#/components/schemas/ErrorResponse"
+      '404':
+        description: Counterparty not found
+        content:
+          application/json:
+            schema:
+              $ref: "../../models/auth.yaml#/components/schemas/ErrorResponse"
+
+  put:
+    tags: [LegalCounterparties]
+    summary: Update legal counterparty
+    description: Обновляет карточку компании и полный список ссылок на тендеры.
+    operationId: updateLegalCounterparty
+    parameters:
+      - in: path
+        name: counterpartyId
+        required: true
+        schema:
+          type: integer
+          format: int64
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../../models/legal-counterparties.yaml#/components/schemas/LegalCounterpartyUpsertRequest"
+    responses:
+      '200':
+        description: Counterparty updated
+        content:
+          application/json:
+            schema:
+              $ref: "../../models/legal-counterparties.yaml#/components/schemas/LegalCounterpartyDetailsResponse"
+      '400':
+        description: Invalid request
+        content:
+          application/json:
+            schema:
+              $ref: "../../models/auth.yaml#/components/schemas/ErrorResponse"
+      '401':
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: "../../models/auth.yaml#/components/schemas/ErrorResponse"
+      '403':
+        description: Forbidden
+        content:
+          application/json:
+            schema:
+              $ref: "../../models/auth.yaml#/components/schemas/ErrorResponse"
+      '404':
+        description: Counterparty not found
+        content:
+          application/json:
+            schema:
+              $ref: "../../models/auth.yaml#/components/schemas/ErrorResponse"
+      '409':
+        description: Counterparty with the same INN already exists
+        content:
+          application/json:
+            schema:
+              $ref: "../../models/auth.yaml#/components/schemas/ErrorResponse"
+
+  delete:
+    tags: [LegalCounterparties]
+    summary: Delete legal counterparty
+    description: Удаляет карточку компании из юридического реестра.
+    operationId: deleteLegalCounterparty
+    parameters:
+      - in: path
+        name: counterpartyId
+        required: true
+        schema:
+          type: integer
+          format: int64
+    responses:
+      '200':
+        description: Counterparty deleted
+        content:
+          application/json:
+            schema:
+              $ref: "../../models/auth.yaml#/components/schemas/MessageResponse"
+      '401':
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: "../../models/auth.yaml#/components/schemas/ErrorResponse"
+      '403':
+        description: Forbidden
+        content:
+          application/json:
+            schema:
+              $ref: "../../models/auth.yaml#/components/schemas/ErrorResponse"
+      '404':
+        description: Counterparty not found
+        content:
+          application/json:
+            schema:
+              $ref: "../../models/auth.yaml#/components/schemas/ErrorResponse"
+
+legalCounterpartyChecks:
+  get:
+    tags: [LegalCounterparties]
+    summary: List counterparty checks
+    description: Возвращает историю юридических проверок компании.
+    operationId: listLegalCounterpartyChecks
+    parameters:
+      - in: path
+        name: counterpartyId
+        required: true
+        schema:
+          type: integer
+          format: int64
+    responses:
+      '200':
+        description: Check history
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: "../../models/legal-counterparties.yaml#/components/schemas/LegalCounterpartyCheckResponse"
+      '401':
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: "../../models/auth.yaml#/components/schemas/ErrorResponse"
+      '403':
+        description: Forbidden
+        content:
+          application/json:
+            schema:
+              $ref: "../../models/auth.yaml#/components/schemas/ErrorResponse"
+      '404':
+        description: Counterparty not found
+        content:
+          application/json:
+            schema:
+              $ref: "../../models/auth.yaml#/components/schemas/ErrorResponse"
+
+  post:
+    tags: [LegalCounterparties]
+    summary: Add counterparty check
+    description: Добавляет юридическую проверку в историю и обновляет текущую оценку компании.
+    operationId: addLegalCounterpartyCheck
+    parameters:
+      - in: path
+        name: counterpartyId
+        required: true
+        schema:
+          type: integer
+          format: int64
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../../models/legal-counterparties.yaml#/components/schemas/LegalCounterpartyCheckCreateRequest"
+    responses:
+      '201':
+        description: Check created
+        content:
+          application/json:
+            schema:
+              $ref: "../../models/legal-counterparties.yaml#/components/schemas/LegalCounterpartyCheckResponse"
+      '400':
+        description: Invalid request
+        content:
+          application/json:
+            schema:
+              $ref: "../../models/auth.yaml#/components/schemas/ErrorResponse"
+      '401':
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: "../../models/auth.yaml#/components/schemas/ErrorResponse"
+      '403':
+        description: Forbidden
+        content:
+          application/json:
+            schema:
+              $ref: "../../models/auth.yaml#/components/schemas/ErrorResponse"
+      '404':
+        description: Counterparty not found
+        content:
+          application/json:
+            schema:
+              $ref: "../../models/auth.yaml#/components/schemas/ErrorResponse"
+
+legalCounterpartyIncidents:
+  get:
+    tags: [LegalCounterparties]
+    summary: List counterparty incidents
+    description: Возвращает историю инцидентов, связанных с компанией.
+    operationId: listLegalCounterpartyIncidents
+    parameters:
+      - in: path
+        name: counterpartyId
+        required: true
+        schema:
+          type: integer
+          format: int64
+    responses:
+      '200':
+        description: Incident history
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: "../../models/legal-counterparties.yaml#/components/schemas/LegalCounterpartyIncidentResponse"
+      '401':
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: "../../models/auth.yaml#/components/schemas/ErrorResponse"
+      '403':
+        description: Forbidden
+        content:
+          application/json:
+            schema:
+              $ref: "../../models/auth.yaml#/components/schemas/ErrorResponse"
+      '404':
+        description: Counterparty not found
+        content:
+          application/json:
+            schema:
+              $ref: "../../models/auth.yaml#/components/schemas/ErrorResponse"
+
+  post:
+    tags: [LegalCounterparties]
+    summary: Add counterparty incident
+    description: Добавляет инцидент, связанный с компанией.
+    operationId: addLegalCounterpartyIncident
+    parameters:
+      - in: path
+        name: counterpartyId
+        required: true
+        schema:
+          type: integer
+          format: int64
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../../models/legal-counterparties.yaml#/components/schemas/LegalCounterpartyIncidentCreateRequest"
+    responses:
+      '201':
+        description: Incident created
+        content:
+          application/json:
+            schema:
+              $ref: "../../models/legal-counterparties.yaml#/components/schemas/LegalCounterpartyIncidentResponse"
+      '400':
+        description: Invalid request
+        content:
+          application/json:
+            schema:
+              $ref: "../../models/auth.yaml#/components/schemas/ErrorResponse"
+      '401':
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: "../../models/auth.yaml#/components/schemas/ErrorResponse"
+      '403':
+        description: Forbidden
+        content:
+          application/json:
+            schema:
+              $ref: "../../models/auth.yaml#/components/schemas/ErrorResponse"
+      '404':
+        description: Counterparty not found
+        content:
+          application/json:
+            schema:
+              $ref: "../../models/auth.yaml#/components/schemas/ErrorResponse"

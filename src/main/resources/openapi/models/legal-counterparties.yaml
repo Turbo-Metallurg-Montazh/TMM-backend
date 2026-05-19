@@ -1,0 +1,301 @@
+components:
+  schemas:
+    LegalCounterpartyTenderLinkRequest:
+      type: object
+      properties:
+        tenderId:
+          type: string
+          description: Внутренний или внешний идентификатор тендера, если известен.
+        tenderName:
+          type: string
+          description: Название тендера.
+        tenderUrl:
+          type: string
+          description: Ссылка на тендер, где участвовала компания.
+        relationType:
+          type: string
+          description: "Роль компании в тендере: CUSTOMER, SUPPLIER, PARTICIPANT или свободное значение."
+      required:
+        - tenderUrl
+
+    LegalCounterpartyTenderLinkResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        tenderId:
+          type: string
+        tenderName:
+          type: string
+        tenderUrl:
+          type: string
+        relationType:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    LegalCounterpartyUpsertRequest:
+      type: object
+      properties:
+        companyName:
+          type: string
+          description: Полное наименование компании.
+        shortName:
+          type: string
+          description: Краткое наименование компании.
+        inn:
+          type: string
+          description: ИНН компании. Используется как уникальный ключ реестра.
+        kpp:
+          type: string
+          description: КПП компании.
+        ogrn:
+          type: string
+          description: ОГРН или ОГРНИП компании.
+        registryType:
+          type: string
+          description: "Тип записи реестра: CUSTOMER, SUPPLIER или BOTH."
+        generalRisks:
+          type: string
+          description: Общие риски по компании.
+        overallScore:
+          type: integer
+          format: int32
+          minimum: 0
+          maximum: 100
+          description: Общая оценка благонадежности от 0 до 100.
+        riskLevel:
+          type: string
+          description: "Уровень риска: UNKNOWN, LOW, MEDIUM, HIGH или CRITICAL."
+        workProhibited:
+          type: boolean
+          default: false
+          description: Флаг "категорически нельзя работать".
+        lastCheckedAt:
+          type: string
+          format: date-time
+          description: Дата последней юридической проверки.
+        legalComment:
+          type: string
+          description: Комментарий юриста по компании.
+        tenderLinks:
+          type: array
+          items:
+            $ref: "#/components/schemas/LegalCounterpartyTenderLinkRequest"
+          description: Ссылки на тендеры, в которых была задействована компания.
+      required:
+        - companyName
+        - inn
+        - registryType
+
+    LegalCounterpartySummaryResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        companyName:
+          type: string
+        shortName:
+          type: string
+        inn:
+          type: string
+        kpp:
+          type: string
+        ogrn:
+          type: string
+        registryType:
+          type: string
+        overallScore:
+          type: integer
+          format: int32
+        riskLevel:
+          type: string
+        workProhibited:
+          type: boolean
+        lastCheckedAt:
+          type: string
+          format: date-time
+        legalComment:
+          type: string
+        updatedAt:
+          type: string
+          format: date-time
+
+    LegalCounterpartyDetailsResponse:
+      allOf:
+        - $ref: "#/components/schemas/LegalCounterpartySummaryResponse"
+        - type: object
+          properties:
+            generalRisks:
+              type: string
+            tenderLinks:
+              type: array
+              items:
+                $ref: "#/components/schemas/LegalCounterpartyTenderLinkResponse"
+            checks:
+              type: array
+              items:
+                $ref: "#/components/schemas/LegalCounterpartyCheckResponse"
+            incidents:
+              type: array
+              items:
+                $ref: "#/components/schemas/LegalCounterpartyIncidentResponse"
+            createdByUsername:
+              type: string
+            updatedByUsername:
+              type: string
+            createdAt:
+              type: string
+              format: date-time
+
+    LegalCounterpartyPageResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/LegalCounterpartySummaryResponse"
+        page:
+          type: integer
+          format: int32
+        size:
+          type: integer
+          format: int32
+        totalElements:
+          type: integer
+          format: int64
+        totalPages:
+          type: integer
+          format: int32
+
+    LegalCounterpartyCheckCreateRequest:
+      type: object
+      properties:
+        checkedAt:
+          type: string
+          format: date-time
+          description: Дата и время проведения проверки.
+        overallScore:
+          type: integer
+          format: int32
+          minimum: 0
+          maximum: 100
+          description: Итоговая оценка по результатам проверки.
+        riskLevel:
+          type: string
+          description: "Уровень риска: UNKNOWN, LOW, MEDIUM, HIGH или CRITICAL."
+        workProhibited:
+          type: boolean
+          description: Итоговый запрет на работу с компанией.
+        risks:
+          type: string
+          description: Выявленные риски.
+        comment:
+          type: string
+          description: Комментарий юриста к проверке.
+      required:
+        - checkedAt
+        - overallScore
+        - riskLevel
+        - workProhibited
+
+    LegalCounterpartyCheckResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        checkedAt:
+          type: string
+          format: date-time
+        overallScore:
+          type: integer
+          format: int32
+        riskLevel:
+          type: string
+        workProhibited:
+          type: boolean
+        risks:
+          type: string
+        comment:
+          type: string
+        checkedByUsername:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+
+    LegalCounterpartyIncidentCreateRequest:
+      type: object
+      properties:
+        incidentDate:
+          type: string
+          format: date
+          description: Дата инцидента.
+        title:
+          type: string
+          description: Краткое название инцидента.
+        description:
+          type: string
+          description: Описание инцидента.
+        impactLevel:
+          type: string
+          description: "Уровень влияния: LOW, MEDIUM, HIGH или CRITICAL."
+      required:
+        - incidentDate
+        - title
+
+    LegalCounterpartyIncidentResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        incidentDate:
+          type: string
+          format: date
+        title:
+          type: string
+        description:
+          type: string
+        impactLevel:
+          type: string
+        createdByUsername:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    LegalCounterpartyAssessmentResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        companyName:
+          type: string
+        inn:
+          type: string
+        registryType:
+          type: string
+        overallScore:
+          type: integer
+          format: int32
+        riskLevel:
+          type: string
+        workProhibited:
+          type: boolean
+        lastCheckedAt:
+          type: string
+          format: date-time
+        generalRisks:
+          type: string

@@ -19,6 +19,40 @@ CREATE TABLE IF NOT EXISTS user_info
     updated_at  TIMESTAMP    NOT NULL DEFAULT now()
 );
 
+CREATE TABLE IF NOT EXISTS password_reset_token
+(
+    id         BIGSERIAL PRIMARY KEY,
+    user_id    BIGINT      NOT NULL REFERENCES user_info (user_id) ON DELETE CASCADE,
+    token_hash VARCHAR(64) NOT NULL UNIQUE,
+    expires_at TIMESTAMP   NOT NULL,
+    used_at    TIMESTAMP,
+    created_at TIMESTAMP   NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_password_reset_token_user_id
+    ON password_reset_token (user_id);
+
+CREATE INDEX IF NOT EXISTS idx_password_reset_token_expires_at
+    ON password_reset_token (expires_at);
+
+CREATE TABLE IF NOT EXISTS refresh_token
+(
+    id                     BIGSERIAL PRIMARY KEY,
+    user_id                BIGINT      NOT NULL REFERENCES user_info (user_id) ON DELETE CASCADE,
+    token_hash             VARCHAR(64) NOT NULL UNIQUE,
+    expires_at             TIMESTAMP   NOT NULL,
+    revoked_at             TIMESTAMP,
+    last_used_at           TIMESTAMP,
+    replaced_by_token_hash VARCHAR(64),
+    created_at             TIMESTAMP   NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_refresh_token_user_id
+    ON refresh_token (user_id);
+
+CREATE INDEX IF NOT EXISTS idx_refresh_token_expires_at
+    ON refresh_token (expires_at);
+
 -- ==========================
 -- ROLES
 -- ==========================
@@ -164,13 +198,46 @@ CREATE TABLE IF NOT EXISTS illiquid_assets
 
 CREATE TABLE IF NOT EXISTS tender_filter
 (
-    id          BIGSERIAL PRIMARY KEY,
-    name        VARCHAR(255),
-    user_id     BIGINT,
-    is_active   BOOLEAN,
-    json_filter TEXT,
-    created_at  TIMESTAMP NOT NULL DEFAULT now(),
-    updated_at  TIMESTAMP NOT NULL DEFAULT now()
+    id                                  BIGSERIAL PRIMARY KEY,
+    name                                VARCHAR(255) NOT NULL,
+    user_id                             BIGINT       NOT NULL,
+    is_active                           BOOLEAN      NOT NULL DEFAULT TRUE,
+    text_values                         TEXT[],
+    exclude_values                      TEXT[],
+    categories                          INTEGER[],
+    include_inns                        TEXT[],
+    exclude_inns                        TEXT[],
+    date_time_from                      TIMESTAMPTZ,
+    date_time_to                        TIMESTAMPTZ,
+    participants_inns                   TEXT[],
+    participants_state                  INTEGER,
+    enable_participants_from_documents  BOOLEAN,
+    region_ids                          TEXT[],
+    purchase_statuses                   INTEGER[],
+    laws                                INTEGER[],
+    procedures                          INTEGER[],
+    electronic_places                   INTEGER[],
+    category_ids                        INTEGER[],
+    strict_search                       BOOLEAN,
+    attachments                         BOOLEAN,
+    max_price_from                      BIGINT,
+    max_price_to                        BIGINT,
+    max_price_none                      BOOLEAN,
+    advance_44                          BOOLEAN,
+    advance_223                         BOOLEAN,
+    non_advance                         BOOLEAN,
+    smp                                 INTEGER,
+    allow_foreign_currency              BOOLEAN,
+    page_number                         INTEGER,
+    sort_order                          INTEGER,
+    application_deadline_from           TIMESTAMPTZ,
+    application_deadline_to             TIMESTAMPTZ,
+    application_deadline_type           VARCHAR(64),
+    included_requirement_ids            INTEGER[],
+    excluded_requirement_ids            INTEGER[],
+    created_at                          TIMESTAMP    NOT NULL DEFAULT now(),
+    updated_at                          TIMESTAMP    NOT NULL DEFAULT now(),
+    CONSTRAINT uk_tender_filter_name UNIQUE (name)
 );
 
 CREATE TABLE IF NOT EXISTS unloading_date
@@ -278,6 +345,113 @@ CREATE TABLE IF NOT EXISTS favorite_markers
 CREATE INDEX IF NOT EXISTS idx_favorite_markers_marker_id
     ON favorite_markers (marker_id);
 
+-- ==========================
+-- LEGAL COUNTERPARTY REGISTRY
+-- ==========================
+CREATE TABLE IF NOT EXISTS legal_counterparty
+(
+    id                  BIGSERIAL PRIMARY KEY,
+    company_name        VARCHAR(512) NOT NULL,
+    short_name          VARCHAR(255),
+    inn                 VARCHAR(12)  NOT NULL,
+    kpp                 VARCHAR(9),
+    ogrn                VARCHAR(15),
+    registry_type       VARCHAR(16)  NOT NULL,
+    general_risks       TEXT,
+    overall_score       INTEGER      NOT NULL DEFAULT 0,
+    risk_level          VARCHAR(16)  NOT NULL DEFAULT 'UNKNOWN',
+    work_prohibited     BOOLEAN      NOT NULL DEFAULT FALSE,
+    last_checked_at     TIMESTAMP,
+    legal_comment       TEXT,
+    created_by_username VARCHAR(255),
+    updated_by_username VARCHAR(255),
+    created_at          TIMESTAMP    NOT NULL DEFAULT now(),
+    updated_at          TIMESTAMP    NOT NULL DEFAULT now(),
+    CONSTRAINT uk_legal_counterparty_inn UNIQUE (inn),
+    CONSTRAINT chk_legal_counterparty_score CHECK (overall_score BETWEEN 0 AND 100),
+    CONSTRAINT chk_legal_counterparty_registry_type CHECK (registry_type IN ('CUSTOMER', 'SUPPLIER', 'BOTH')),
+    CONSTRAINT chk_legal_counterparty_risk_level CHECK (risk_level IN ('UNKNOWN', 'LOW', 'MEDIUM', 'HIGH', 'CRITICAL'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_legal_counterparty_company_name
+    ON legal_counterparty (lower(company_name));
+
+CREATE INDEX IF NOT EXISTS idx_legal_counterparty_short_name
+    ON legal_counterparty (lower(short_name));
+
+CREATE INDEX IF NOT EXISTS idx_legal_counterparty_inn
+    ON legal_counterparty (inn);
+
+CREATE INDEX IF NOT EXISTS idx_legal_counterparty_kpp
+    ON legal_counterparty (kpp);
+
+CREATE INDEX IF NOT EXISTS idx_legal_counterparty_ogrn
+    ON legal_counterparty (ogrn);
+
+CREATE INDEX IF NOT EXISTS idx_legal_counterparty_registry_type
+    ON legal_counterparty (registry_type);
+
+CREATE INDEX IF NOT EXISTS idx_legal_counterparty_risk_level
+    ON legal_counterparty (risk_level);
+
+CREATE INDEX IF NOT EXISTS idx_legal_counterparty_work_prohibited
+    ON legal_counterparty (work_prohibited);
+
+CREATE INDEX IF NOT EXISTS idx_legal_counterparty_last_checked_at
+    ON legal_counterparty (last_checked_at DESC);
+
+CREATE TABLE IF NOT EXISTS legal_counterparty_check
+(
+    id                  BIGSERIAL PRIMARY KEY,
+    counterparty_id     BIGINT      NOT NULL REFERENCES legal_counterparty (id) ON DELETE CASCADE,
+    checked_at          TIMESTAMP   NOT NULL,
+    overall_score       INTEGER     NOT NULL,
+    risk_level          VARCHAR(16) NOT NULL,
+    work_prohibited     BOOLEAN     NOT NULL DEFAULT FALSE,
+    risks               TEXT,
+    comment             TEXT,
+    checked_by_username VARCHAR(255),
+    created_at          TIMESTAMP   NOT NULL DEFAULT now(),
+    updated_at          TIMESTAMP   NOT NULL DEFAULT now(),
+    CONSTRAINT chk_legal_counterparty_check_score CHECK (overall_score BETWEEN 0 AND 100),
+    CONSTRAINT chk_legal_counterparty_check_risk_level CHECK (risk_level IN ('UNKNOWN', 'LOW', 'MEDIUM', 'HIGH', 'CRITICAL'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_legal_counterparty_check_counterparty
+    ON legal_counterparty_check (counterparty_id, checked_at DESC);
+
+CREATE TABLE IF NOT EXISTS legal_counterparty_incident
+(
+    id                  BIGSERIAL PRIMARY KEY,
+    counterparty_id     BIGINT       NOT NULL REFERENCES legal_counterparty (id) ON DELETE CASCADE,
+    incident_date       DATE         NOT NULL,
+    title               VARCHAR(512) NOT NULL,
+    description         TEXT,
+    impact_level        VARCHAR(16)  NOT NULL DEFAULT 'MEDIUM',
+    created_by_username VARCHAR(255),
+    created_at          TIMESTAMP    NOT NULL DEFAULT now(),
+    updated_at          TIMESTAMP    NOT NULL DEFAULT now(),
+    CONSTRAINT chk_legal_counterparty_incident_impact CHECK (impact_level IN ('LOW', 'MEDIUM', 'HIGH', 'CRITICAL'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_legal_counterparty_incident_counterparty
+    ON legal_counterparty_incident (counterparty_id, incident_date DESC);
+
+CREATE TABLE IF NOT EXISTS legal_counterparty_tender_link
+(
+    id              BIGSERIAL PRIMARY KEY,
+    counterparty_id BIGINT        NOT NULL REFERENCES legal_counterparty (id) ON DELETE CASCADE,
+    tender_id       VARCHAR(255),
+    tender_name     VARCHAR(1024),
+    tender_url      VARCHAR(2048) NOT NULL,
+    relation_type   VARCHAR(32),
+    created_at      TIMESTAMP     NOT NULL DEFAULT now(),
+    updated_at      TIMESTAMP     NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_legal_counterparty_tender_link_counterparty
+    ON legal_counterparty_tender_link (counterparty_id);
+
 -- =========================================================
 -- RBAC SEED
 -- =========================================================
@@ -287,26 +461,28 @@ WITH permission_catalog(code, description) AS (
            ('RBAC.ROLE.DELETE', 'Удаление ролей'),
            ('RBAC.USER.READ', 'Просмотр пользователей'),
            ('RBAC.USER.WRITE', 'Управление пользователями и назначением ролей'),
-           ('RBAC.PERMISSION.READ', 'Просмотр каталога прав доступа'),
+           ('RBAC.PERMISSION.READ', 'Просмотр справочника прав доступа'),
 
            ('TENDER.SEARCH', 'Поиск тендеров'),
-           ('TENDER.VIEW', 'Просмотр деталей тендера'),
+           ('TENDER.VIEW', 'Просмотр карточек тендеров'),
            ('TENDER.EDIT', 'Редактирование тендеров'),
            ('TENDER.EXPORT', 'Экспорт данных тендеров'),
            ('TENDER_FILTER.WRITE', 'Управление фильтрами тендеров'),
 
-           ('OFFER.APPROVE', 'Согласование предложений'),
-           ('OFFER.VIEW_ALL', 'Просмотр всех предложений'),
-           ('OFFER.CALCULATE', 'Расчет предложений'),
-           ('OFFER.EDIT', 'Редактирование предложений'),
+           ('OFFER.APPROVE', 'Согласование коммерческих предложений'),
+           ('OFFER.VIEW_ALL', 'Просмотр всех коммерческих предложений'),
+           ('OFFER.CALCULATE', 'Расчет коммерческих предложений'),
+           ('OFFER.EDIT', 'Редактирование коммерческих предложений'),
            ('OFFER.GENERATE_CP', 'Формирование коммерческих предложений'),
-           ('OFFER.SUBMIT', 'Отправка предложений'),
+           ('OFFER.SUBMIT', 'Отправка коммерческих предложений'),
 
            ('REPORTS.VIEW', 'Просмотр отчетов'),
            ('PROCUREMENT.SELECT_ANALOGS', 'Подбор аналогов товаров'),
            ('PROCUREMENT.EDIT_NONDEALER_POSITIONS', 'Редактирование позиций закупки не у дилера'),
-           ('CONTRACTOR.CHECK_RELIABILITY', 'Проверка надежности контрагента'),
-           ('CONTRACTOR.VIEW_REPORTS', 'Просмотр отчетов по контрагенту'),
+           ('CONTRACTOR.CHECK_RELIABILITY', 'Проверка благонадежности контрагента'),
+           ('CONTRACTOR.VIEW_REPORTS', 'Просмотр отчетов по контрагентам'),
+           ('CONTRACTOR.REGISTRY.READ', 'Просмотр юридического реестра контрагентов и поставщиков'),
+           ('CONTRACTOR.REGISTRY.WRITE', 'Ведение юридического реестра контрагентов и поставщиков'),
            ('INVENTORY.NOLIQUID.VIEW', 'Просмотр неликвидных остатков'),
            ('INVENTORY.NOLIQUID.MANAGE', 'Управление неликвидными остатками')
 )
@@ -319,10 +495,10 @@ ON CONFLICT (code) DO NOTHING;
 WITH role_templates(code, name, is_system) AS (
     VALUES ('SALES_HEAD', 'Руководитель отдела продаж', TRUE),
            ('SALES_MANAGER', 'Менеджер отдела продаж', TRUE),
-           ('PROCUREMENT_SPECIALIST', 'Сотрудник снабжения', TRUE),
+           ('PROCUREMENT_SPECIALIST', 'Специалист отдела снабжения', TRUE),
            ('LAWYER', 'Юрист', TRUE),
            ('STOREKEEPER', 'Кладовщик', TRUE),
-           ('RBAC_ADMIN', 'Администратор RBAC', TRUE)
+           ('RBAC_ADMIN', 'Администратор прав доступа', TRUE)
 )
 INSERT
 INTO roles (code, name, is_system, created_at, updated_at)
@@ -336,6 +512,7 @@ WITH mapping(role_code, permission_code) AS (
         ('SALES_HEAD', 'REPORTS.VIEW'),
         ('SALES_HEAD', 'OFFER.VIEW_ALL'),
         ('SALES_HEAD', 'TENDER.VIEW'),
+        ('SALES_HEAD', 'CONTRACTOR.REGISTRY.READ'),
 
         ('SALES_MANAGER', 'TENDER.SEARCH'),
         ('SALES_MANAGER', 'OFFER.CALCULATE'),
@@ -343,12 +520,16 @@ WITH mapping(role_code, permission_code) AS (
         ('SALES_MANAGER', 'OFFER.GENERATE_CP'),
         ('SALES_MANAGER', 'OFFER.SUBMIT'),
         ('SALES_MANAGER', 'TENDER_FILTER.WRITE'),
+        ('SALES_MANAGER', 'CONTRACTOR.REGISTRY.READ'),
 
         ('PROCUREMENT_SPECIALIST', 'PROCUREMENT.SELECT_ANALOGS'),
         ('PROCUREMENT_SPECIALIST', 'PROCUREMENT.EDIT_NONDEALER_POSITIONS'),
+        ('PROCUREMENT_SPECIALIST', 'CONTRACTOR.REGISTRY.READ'),
 
         ('LAWYER', 'CONTRACTOR.CHECK_RELIABILITY'),
         ('LAWYER', 'CONTRACTOR.VIEW_REPORTS'),
+        ('LAWYER', 'CONTRACTOR.REGISTRY.READ'),
+        ('LAWYER', 'CONTRACTOR.REGISTRY.WRITE'),
 
         ('STOREKEEPER', 'INVENTORY.NOLIQUID.VIEW'),
         ('STOREKEEPER', 'INVENTORY.NOLIQUID.MANAGE'),
@@ -358,7 +539,11 @@ WITH mapping(role_code, permission_code) AS (
         ('RBAC_ADMIN', 'RBAC.ROLE.DELETE'),
         ('RBAC_ADMIN', 'RBAC.USER.READ'),
         ('RBAC_ADMIN', 'RBAC.USER.WRITE'),
-        ('RBAC_ADMIN', 'RBAC.PERMISSION.READ')
+        ('RBAC_ADMIN', 'RBAC.PERMISSION.READ'),
+        ('RBAC_ADMIN', 'CONTRACTOR.CHECK_RELIABILITY'),
+        ('RBAC_ADMIN', 'CONTRACTOR.VIEW_REPORTS'),
+        ('RBAC_ADMIN', 'CONTRACTOR.REGISTRY.READ'),
+        ('RBAC_ADMIN', 'CONTRACTOR.REGISTRY.WRITE')
 )
 INSERT
 INTO role_permission (role_id, permission_id)

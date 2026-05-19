@@ -1,18 +1,19 @@
 package com.kindred.emkcrm_project_backend.integration;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.kindred.emkcrm_project_backend.api.UsersApiController;
+import com.kindred.emkcrm_project_backend.api.LegalCounterpartiesApiController;
 import com.kindred.emkcrm_project_backend.authentication.AuthCookieService;
-import com.kindred.emkcrm_project_backend.authentication.CurrentUserProfileService;
 import com.kindred.emkcrm_project_backend.authentication.JwtTokenProvider;
 import com.kindred.emkcrm_project_backend.authentication.SecurityConfig;
 import com.kindred.emkcrm_project_backend.authentication.UserDetail;
-import com.kindred.emkcrm_project_backend.authentication.impl.UsersApiDelegateImpl;
 import com.kindred.emkcrm_project_backend.config.JacksonConfig;
-import com.kindred.emkcrm_project_backend.exception.ConflictException;
 import com.kindred.emkcrm_project_backend.exception.GlobalExceptionHandler;
-import com.kindred.emkcrm_project_backend.model.UpdateCurrentUserRequest;
-import com.kindred.emkcrm_project_backend.model.UserProfileDto;
+import com.kindred.emkcrm_project_backend.legal.LegalCounterpartiesApiDelegateImpl;
+import com.kindred.emkcrm_project_backend.model.LegalCounterpartyDetailsResponse;
+import com.kindred.emkcrm_project_backend.model.LegalCounterpartyPageResponse;
+import com.kindred.emkcrm_project_backend.model.LegalCounterpartySummaryResponse;
+import com.kindred.emkcrm_project_backend.model.LegalCounterpartyUpsertRequest;
+import com.kindred.emkcrm_project_backend.services.LegalCounterpartyService;
 import jakarta.servlet.Filter;
 import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.BeforeEach;
@@ -22,7 +23,6 @@ import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.flyway.autoconfigure.FlywayAutoConfiguration;
 import org.springframework.boot.hibernate.autoconfigure.HibernateJpaAutoConfiguration;
 import org.springframework.boot.jdbc.autoconfigure.DataSourceAutoConfiguration;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.userdetails.User;
@@ -33,23 +33,27 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.RequestPostProcessor;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
+import org.springframework.boot.test.context.SpringBootTest;
+
+import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest(
-        classes = UsersApiIntegrationTest.TestApplication.class,
+        classes = LegalCounterpartiesApiIntegrationTest.TestApplication.class,
         webEnvironment = SpringBootTest.WebEnvironment.MOCK,
         properties = "security.jwt.token.secret-key=12345678901234567890123456789012"
 )
 @TestConstructor(autowireMode = TestConstructor.AutowireMode.ALL)
-class UsersApiIntegrationTest {
+class LegalCounterpartiesApiIntegrationTest {
 
     private static final String CSRF_TOKEN = "test-csrf-token";
 
@@ -62,12 +66,12 @@ class UsersApiIntegrationTest {
     private final WebApplicationContext webApplicationContext;
 
     @MockitoBean
-    private CurrentUserProfileService currentUserProfileService;
+    private LegalCounterpartyService legalCounterpartyService;
 
     @MockitoBean
     private UserDetail userDetail;
 
-    UsersApiIntegrationTest(
+    LegalCounterpartiesApiIntegrationTest(
             ObjectMapper objectMapper,
             JwtTokenProvider jwtTokenProvider,
             WebApplicationContext webApplicationContext
@@ -83,56 +87,78 @@ class UsersApiIntegrationTest {
                 .addFilters(webApplicationContext.getBean("springSecurityFilterChain", Filter.class))
                 .build();
 
-        when(userDetail.loadUserByUsername("alice")).thenReturn(authenticatedUser("alice"));
+        UserDetails principal = User.withUsername("lawyer")
+                .password("ignored")
+                .authorities("CONTRACTOR.REGISTRY.READ", "CONTRACTOR.REGISTRY.WRITE")
+                .build();
+        when(userDetail.loadUserByUsername("lawyer")).thenReturn(principal);
     }
 
     @Test
-    void getCurrentUserProfileRequiresAuthentication() throws Exception {
-        mockMvc.perform(get("/users/me"))
+    void searchCounterpartiesRequiresAuthentication() throws Exception {
+        mockMvc.perform(get("/legal/counterparties"))
                 .andExpect(status().isUnauthorized())
                 .andExpect(content().json("{\"error\":\"Unauthorized\"}"));
     }
 
     @Test
-    void getCurrentUserProfileReturnsPayloadForAuthenticatedUser() throws Exception {
-        UserProfileDto response = new UserProfileDto();
-        response.setUsername("alice");
-        response.setEmail("alice@example.com");
-        response.setFirstName("Alice");
-        when(currentUserProfileService.getCurrentUserProfile()).thenReturn(response);
+    void searchCounterpartiesReturnsPageWhenAuthorized() throws Exception {
+        LegalCounterpartySummaryResponse item = new LegalCounterpartySummaryResponse();
+        item.setId(10L);
+        item.setCompanyName("ООО Ромашка");
+        item.setInn("6671000000");
+        item.setRegistryType("CUSTOMER");
+        item.setOverallScore(82);
+        item.setRiskLevel("LOW");
+        item.setWorkProhibited(false);
 
-        mockMvc.perform(get("/users/me")
-                        .with(auth("alice")))
+        LegalCounterpartyPageResponse response = new LegalCounterpartyPageResponse();
+        response.setItems(List.of(item));
+        response.setPage(0);
+        response.setSize(20);
+        response.setTotalElements(1L);
+        response.setTotalPages(1);
+        when(legalCounterpartyService.search(eq("ром"), eq("CUSTOMER"), eq("LOW"), eq(false), eq(0), eq(20)))
+                .thenReturn(response);
+
+        mockMvc.perform(get("/legal/counterparties")
+                        .with(auth("lawyer"))
+                        .param("query", "ром")
+                        .param("registryType", "CUSTOMER")
+                        .param("riskLevel", "LOW")
+                        .param("workProhibited", "false")
+                        .param("page", "0")
+                        .param("size", "20"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.username").value("alice"))
-                .andExpect(jsonPath("$.email").value("alice@example.com"))
-                .andExpect(jsonPath("$.firstName").value("Alice"));
+                .andExpect(jsonPath("$.items[0].id").value(10))
+                .andExpect(jsonPath("$.items[0].companyName").value("ООО Ромашка"))
+                .andExpect(jsonPath("$.items[0].overallScore").value(82))
+                .andExpect(jsonPath("$.totalElements").value(1));
     }
 
     @Test
-    void updateCurrentUserProfileMapsConflictTo409() throws Exception {
-        UpdateCurrentUserRequest request = new UpdateCurrentUserRequest();
-        request.setEmail("taken@example.com");
-        request.setFirstName("Alice");
-        request.setLastName("Doe");
-        when(currentUserProfileService.updateCurrentUserProfile(any(UpdateCurrentUserRequest.class)))
-                .thenThrow(new ConflictException("Email already taken"));
+    void createCounterpartyReturnsCreatedDetails() throws Exception {
+        LegalCounterpartyUpsertRequest request = new LegalCounterpartyUpsertRequest();
+        request.setCompanyName("ООО Ромашка");
+        request.setInn("6671000000");
+        request.setRegistryType("CUSTOMER");
 
-        mockMvc.perform(put("/users/me")
-                        .with(auth("alice"))
+        LegalCounterpartyDetailsResponse response = new LegalCounterpartyDetailsResponse();
+        response.setId(10L);
+        response.setCompanyName("ООО Ромашка");
+        response.setInn("6671000000");
+        response.setRegistryType("CUSTOMER");
+        when(legalCounterpartyService.create(any(LegalCounterpartyUpsertRequest.class))).thenReturn(response);
+
+        mockMvc.perform(post("/legal/counterparties")
+                        .with(auth("lawyer"))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isConflict())
-                .andExpect(jsonPath("$.error").value("Email already taken"));
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.id").value(10))
+                .andExpect(jsonPath("$.inn").value("6671000000"));
 
-        verify(currentUserProfileService).updateCurrentUserProfile(any(UpdateCurrentUserRequest.class));
-    }
-
-    private UserDetails authenticatedUser(String username) {
-        return User.withUsername(username)
-                .password("ignored")
-                .authorities(new String[0])
-                .build();
+        verify(legalCounterpartyService).create(any(LegalCounterpartyUpsertRequest.class));
     }
 
     private RequestPostProcessor auth(String username) {
@@ -157,8 +183,8 @@ class UsersApiIntegrationTest {
             SecurityConfig.class,
             GlobalExceptionHandler.class,
             JwtTokenProvider.class,
-            UsersApiController.class,
-            UsersApiDelegateImpl.class
+            LegalCounterpartiesApiController.class,
+            LegalCounterpartiesApiDelegateImpl.class
     })
     static class TestApplication {
     }

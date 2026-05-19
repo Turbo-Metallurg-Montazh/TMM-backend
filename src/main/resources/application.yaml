@@ -53,10 +53,17 @@ springdoc:
     enabled: true
 
 security:
+  auth:
+    allowed-origins: ${SECURITY_AUTH_ALLOWED_ORIGINS:http://localhost:5173,https://turbo-metallurg-montazh.ru}
+    cookie:
+      secure: ${SECURITY_AUTH_COOKIE_SECURE:true}
+      same-site: ${SECURITY_AUTH_COOKIE_SAME_SITE:Strict}
   jwt:
     token:
       secret-key: ${SECURITY_JWT_TOKEN_SECRET_KEY:change-me-change-me-change-me-change-me}
-      expire-length: 3600000 # 1 hour
+      expire-length: ${SECURITY_JWT_ACCESS_TOKEN_EXPIRE_LENGTH:900000} # 15 minutes
+    refresh-token:
+      expire-length: ${SECURITY_JWT_REFRESH_TOKEN_EXPIRE_LENGTH:2592000000} # 30 days
 
 logging:
   level:

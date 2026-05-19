@@ -29,12 +29,15 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 
 class PasswordResetServiceTest {
 
     private StubPasswordResetTokenRepository tokenRepository;
     private StubUserService userService;
     private StubEmailService emailService;
+    private RefreshTokenService refreshTokenService;
     private PasswordResetService passwordResetService;
 
     @BeforeEach
@@ -42,11 +45,13 @@ class PasswordResetServiceTest {
         tokenRepository = new StubPasswordResetTokenRepository();
         userService = new StubUserService();
         emailService = new StubEmailService();
+        refreshTokenService = mock(RefreshTokenService.class);
         passwordResetService = new PasswordResetService(
                 tokenRepository.proxy(),
                 userService,
                 emailService,
-                new EmailProperties(null, null, "noreply@example.com", null, "https://emk.example/reset")
+                new EmailProperties(null, null, "noreply@example.com", null, "https://emk.example/reset"),
+                refreshTokenService
         );
     }
 
@@ -98,6 +103,7 @@ class PasswordResetServiceTest {
         assertThat(user.getPassword()).isEqualTo("encoded:new-password");
         assertThat(token.getUsedAt()).isNotNull();
         assertThat(tokenRepository.lastInvalidatedUserId).isEqualTo(20L);
+        verify(refreshTokenService).revokeActiveTokens(user);
     }
 
     @Test

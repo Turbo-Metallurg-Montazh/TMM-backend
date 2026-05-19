@@ -4,7 +4,7 @@ Backend-сервис для CRM: аутентификация пользоват
 
 ## Технологии
 
-- Java 25
+- Java 26
 - Spring Boot 4 (Milestone)
 - Spring Security + JWT
 - Spring Data JPA
@@ -27,7 +27,7 @@ Backend-сервис для CRM: аутентификация пользоват
 
 ## Требования
 
-- JDK 25
+- JDK 26
 - Docker + Docker Compose
 - (опционально) Maven 4+, либо использовать `./mvnw`
 
@@ -42,6 +42,11 @@ Backend-сервис для CRM: аутентификация пользоват
 Полезно вынести в env (вместо хранения в `application.yaml`):
 
 - `SECURITY_JWT_TOKEN_SECRET_KEY`
+- `SECURITY_JWT_ACCESS_TOKEN_EXPIRE_LENGTH` (по умолчанию 15 минут)
+- `SECURITY_JWT_REFRESH_TOKEN_EXPIRE_LENGTH` (по умолчанию 30 дней)
+- `SECURITY_AUTH_ALLOWED_ORIGINS`
+- `SECURITY_AUTH_COOKIE_SECURE`
+- `SECURITY_AUTH_COOKIE_SAME_SITE`
 - `EXTERNAL_API_KONTUR_API_KEY`
 - `PUBLIC_AI_CLOUDFLARE_ACCOUNT_ID`
 - `PUBLIC_AI_CLOUDFLARE_API_TOKEN`
@@ -78,9 +83,19 @@ export SPRING_DATASOURCE_PASSWORD=postgres
 
 Публичные:
 
-- `POST /login` - логин по username/email + password, возвращает JWT
+- `POST /login` - логин по username/email + password, выставляет auth cookies
+- `POST /refresh` - ротация refresh-токена и выпуск нового access-токена
+- `POST /logout` - отзыв текущего refresh-токена и очистка auth cookies
 - `POST /password-reset/confirm` - подтверждение сброса пароля по токену из письма
 - `POST /public-ai/chat` - запрос к AI-провайдеру
+
+Авторизация:
+
+- JWT access-токен передается только в HttpOnly cookie `access_token`, не в `Authorization` header.
+- Refresh-токен передается в HttpOnly cookie `refresh_token`, хранится в БД только как SHA-256 hash и ротируется на каждом `POST /refresh`.
+- Для unsafe-запросов (`POST`, `PUT`, `DELETE`) фронтенд должен отправлять header `X-XSRF-TOKEN` со значением из readable cookie `XSRF-TOKEN`.
+- Все запросы с cookie должны выполняться с credentials (`credentials: "include"` / `withCredentials: true`).
+- Backend дополнительно проверяет `Origin`/`Referer` по списку `SECURITY_AUTH_ALLOWED_ORIGINS`.
 
 Защищенные (по ролям):
 
@@ -107,7 +122,7 @@ export SPRING_DATASOURCE_PASSWORD=postgres
 ## База данных и миграции
 
 - Миграции Flyway лежат в `src/main/resources/db/migration`
-- Основные таблицы: `user_info`, `roles`, `user_roles`, `illiquid_assets`, `tender_filter`, `unloading_date`, `tenders`
+- Основные таблицы: `user_info`, `roles`, `user_roles`, `refresh_token`, `illiquid_assets`, `tender_filter`, `unloading_date`, `tenders`
 
 После первого запуска убедитесь, что в `roles` есть значения ролей, используемых системой (`USER`, `ADMIN`, `OWNER`).
 

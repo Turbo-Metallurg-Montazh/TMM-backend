@@ -20,12 +20,17 @@ login:
 
       '200':
         description: Login successful
+        headers:
+          Set-Cookie:
+            description: HttpOnly access_token and refresh_token cookies plus readable XSRF-TOKEN cookie.
+            schema:
+              type: string
         content:
           application/json:
             schema:
               title: Login200Response
               allOf:
-                - $ref: "../../models/auth.yaml#/components/schemas/TokenResponse"
+                - $ref: "../../models/auth.yaml#/components/schemas/MessageResponse"
 
       '401':
         description: Invalid login or password
@@ -51,6 +56,55 @@ login:
           application/json:
             schema:
               title: Login501Response
+              allOf:
+                - $ref: "../../models/auth.yaml#/components/schemas/MessageResponse"
+
+refresh:
+  post:
+    tags: [Auth]
+    summary: Refresh current session using refresh cookie
+    operationId: refresh
+    responses:
+      '200':
+        description: Session refreshed
+        headers:
+          Set-Cookie:
+            description: Rotated HttpOnly access_token and refresh_token cookies plus readable XSRF-TOKEN cookie.
+            schema:
+              type: string
+        content:
+          application/json:
+            schema:
+              title: Refresh200Response
+              allOf:
+                - $ref: "../../models/auth.yaml#/components/schemas/MessageResponse"
+
+      '401':
+        description: Missing, invalid, expired, or revoked refresh token
+        content:
+          application/json:
+            schema:
+              title: Refresh401Response
+              allOf:
+                - $ref: "../../models/auth.yaml#/components/schemas/ErrorResponse"
+
+logout:
+  post:
+    tags: [Auth]
+    summary: Logout current session and clear auth cookies
+    operationId: logout
+    responses:
+      '200':
+        description: Session closed
+        headers:
+          Set-Cookie:
+            description: Expired auth cookies.
+            schema:
+              type: string
+        content:
+          application/json:
+            schema:
+              title: Logout200Response
               allOf:
                 - $ref: "../../models/auth.yaml#/components/schemas/MessageResponse"
 

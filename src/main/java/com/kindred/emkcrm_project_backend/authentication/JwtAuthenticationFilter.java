@@ -14,6 +14,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
+import org.springframework.web.util.WebUtils;
+
 
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final UserDetailsService userDetailsService;
@@ -54,9 +56,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
 
     private String getJwtFromRequest(HttpServletRequest request) {
-        String bearerToken = request.getHeader("Authorization");
-        if (bearerToken != null && bearerToken.startsWith("Bearer ")) {
-            return bearerToken.substring(7);
+        var cookie = WebUtils.getCookie(request, AuthCookieService.ACCESS_TOKEN_COOKIE);
+        if (cookie != null && cookie.getValue() != null && !cookie.getValue().isBlank()) {
+            return cookie.getValue();
         }
         return null;
     }

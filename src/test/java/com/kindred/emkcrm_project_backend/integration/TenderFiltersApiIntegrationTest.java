@@ -2,6 +2,7 @@ package com.kindred.emkcrm_project_backend.integration;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kindred.emkcrm_project_backend.api.TenderFiltersApiController;
+import com.kindred.emkcrm_project_backend.authentication.AuthCookieService;
 import com.kindred.emkcrm_project_backend.authentication.JwtTokenProvider;
 import com.kindred.emkcrm_project_backend.authentication.SecurityConfig;
 import com.kindred.emkcrm_project_backend.authentication.UserDetail;
@@ -17,6 +18,7 @@ import com.kindred.emkcrm_project_backend.model.TenderFilterSummaryResponse;
 import com.kindred.emkcrm_project_backend.services.TenderFilterExportService;
 import com.kindred.emkcrm_project_backend.services.TenderFilterManagementService;
 import com.kindred.emkcrm_project_backend.tenderfilters.TenderFiltersApiDelegateImpl;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.Filter;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -33,6 +35,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.test.context.TestConstructor;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.request.RequestPostProcessor;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
@@ -55,6 +58,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 )
 @TestConstructor(autowireMode = TestConstructor.AutowireMode.ALL)
 class TenderFiltersApiIntegrationTest {
+
+    private static final String CSRF_TOKEN = "test-csrf-token";
 
     private MockMvc mockMvc;
 
@@ -117,7 +122,7 @@ class TenderFiltersApiIntegrationTest {
                 .thenReturn("generated-filter");
 
         mockMvc.perform(post("/tender-filters/parse")
-                        .header("Authorization", bearerToken("alice"))
+                        .with(auth("alice"))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
@@ -134,7 +139,7 @@ class TenderFiltersApiIntegrationTest {
                 .thenThrow(new ConflictException("duplicate filter"));
 
         mockMvc.perform(post("/tender-filters/parse")
-                        .header("Authorization", bearerToken("alice"))
+                        .with(auth("alice"))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isConflict())
@@ -152,7 +157,7 @@ class TenderFiltersApiIntegrationTest {
         when(tenderFilterManagementService.listTenderFilters()).thenReturn(List.of(first, second));
 
         mockMvc.perform(get("/tender-filters")
-                        .header("Authorization", bearerToken("alice")))
+                        .with(auth("alice")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].name").value("A"))
                 .andExpect(jsonPath("$[0].active").value(true))
@@ -174,7 +179,7 @@ class TenderFiltersApiIntegrationTest {
         when(tenderFilterExportService.exportTendersByFilter(any(ExportTendersByFilterRequest.class))).thenReturn(response);
 
         mockMvc.perform(post("/tender-filters/export")
-                        .header("Authorization", bearerToken("alice"))
+                        .with(auth("alice"))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
@@ -192,15 +197,22 @@ class TenderFiltersApiIntegrationTest {
                 .exportTendersByFilter(any(ExportTendersByFilterRequest.class));
 
         mockMvc.perform(post("/tender-filters/export")
-                        .header("Authorization", bearerToken("alice"))
+                        .with(auth("alice"))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.error").value("date range is invalid"));
     }
 
-    private String bearerToken(String username) {
-        return "Bearer " + jwtTokenProvider.generateToken(username);
+    private RequestPostProcessor auth(String username) {
+        return request -> {
+            request.setCookies(
+                    new Cookie(AuthCookieService.ACCESS_TOKEN_COOKIE, jwtTokenProvider.generateAccessToken(username)),
+                    new Cookie(AuthCookieService.CSRF_TOKEN_COOKIE, CSRF_TOKEN)
+            );
+            request.addHeader(AuthCookieService.CSRF_TOKEN_HEADER, CSRF_TOKEN);
+            return request;
+        };
     }
 
     @SpringBootConfiguration

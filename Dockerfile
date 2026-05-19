@@ -1,19 +1,21 @@
 # ---------- STAGE 1: Build ----------
-FROM maven:4.0.0-rc-5-amazoncorretto-25-debian-trixie AS build
+FROM eclipse-temurin:26-jdk AS build
 
 WORKDIR /app
 
 # Кэш зависимостей (максимально эффективно)
 COPY pom.xml .
+COPY mvnw .
+COPY .mvn ./.mvn
 COPY .openapi-generator-ignore .
-RUN mvn -B -q dependency:go-offline
+RUN ./mvnw -B -q dependency:go-offline
 
 # Копируем исходники и собираем JAR
 COPY src ./src
-RUN mvn -B -q -Dmaven.test.skip=true package
+RUN ./mvnw -B -q -Dmaven.test.skip=true package
 
 # ---------- STAGE 2: Runtime ----------
-FROM eclipse-temurin:25-jre
+FROM eclipse-temurin:26-jre
 
 WORKDIR /app
 

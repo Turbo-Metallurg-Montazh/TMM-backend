@@ -3,6 +3,7 @@ package com.kindred.emkcrm_project_backend.integration;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kindred.emkcrm_project_backend.api.AdminUsersApiController;
 import com.kindred.emkcrm_project_backend.api.RbacAdminApiController;
+import com.kindred.emkcrm_project_backend.authentication.AuthCookieService;
 import com.kindred.emkcrm_project_backend.authentication.JwtTokenProvider;
 import com.kindred.emkcrm_project_backend.authentication.PasswordResetService;
 import com.kindred.emkcrm_project_backend.authentication.SecurityConfig;
@@ -19,13 +20,13 @@ import com.kindred.emkcrm_project_backend.config.JacksonConfig;
 import com.kindred.emkcrm_project_backend.db.entities.Permission;
 import com.kindred.emkcrm_project_backend.db.entities.User;
 import com.kindred.emkcrm_project_backend.db.repositories.UserRepository;
-import com.kindred.emkcrm_project_backend.model.MessageResponse;
 import com.kindred.emkcrm_project_backend.model.SendPasswordResetLinkRequest;
 import com.kindred.emkcrm_project_backend.exception.GlobalExceptionHandler;
 import com.kindred.emkcrm_project_backend.services.email.EmailService;
 import com.kindred.emkcrm_project_backend.utils.PasswordGenerator;
 import com.kindred.emkcrm_project_backend.utils.UsernameGenerator;
 import jakarta.servlet.Filter;
+import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.context.annotation.Bean;
@@ -41,6 +42,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.test.context.TestConstructor;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.request.RequestPostProcessor;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
@@ -48,7 +50,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -64,6 +65,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 )
 @TestConstructor(autowireMode = TestConstructor.AutowireMode.ALL)
 class AdminApiIntegrationTest {
+
+    private static final String CSRF_TOKEN = "test-csrf-token";
 
     private MockMvc mockMvc;
 
@@ -147,7 +150,7 @@ class AdminApiIntegrationTest {
     @Test
     void listUsersReturnsForbiddenWithoutReadAuthority() throws Exception {
         mockMvc.perform(get("/admin/users")
-                        .header("Authorization", bearerToken("regular")))
+                        .with(auth("regular")))
                 .andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.error").value("Forbidden"));
 
@@ -161,7 +164,7 @@ class AdminApiIntegrationTest {
         when(rbacService.findRolesByUserIds(Set.of(1L))).thenReturn(Map.of(1L, Set.of()));
 
         mockMvc.perform(get("/admin/users")
-                        .header("Authorization", bearerToken("reader")))
+                        .with(auth("reader")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].username").value("alice"))
                 .andExpect(jsonPath("$[0].email").value("alice@example.com"));
@@ -170,7 +173,7 @@ class AdminApiIntegrationTest {
     @Test
     void listPermissionsReturnsForbiddenWithoutPermissionReadAuthority() throws Exception {
         mockMvc.perform(get("/admin/permissions")
-                        .header("Authorization", bearerToken("regular")))
+                        .with(auth("regular")))
                 .andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.error").value("Forbidden"));
 
@@ -185,7 +188,7 @@ class AdminApiIntegrationTest {
         when(rbacService.listPermissions()).thenReturn(List.of(permission));
 
         mockMvc.perform(get("/admin/permissions")
-                        .header("Authorization", bearerToken("permission-reader")))
+                        .with(auth("permission-reader")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].code").value("RBAC.USER.READ"))
                 .andExpect(jsonPath("$[0].description").value("Read users"));
@@ -210,8 +213,15 @@ class AdminApiIntegrationTest {
                 .build();
     }
 
-    private String bearerToken(String username) {
-        return "Bearer " + jwtTokenProvider.generateToken(username);
+    private RequestPostProcessor auth(String username) {
+        return request -> {
+            request.setCookies(
+                    new Cookie(AuthCookieService.ACCESS_TOKEN_COOKIE, jwtTokenProvider.generateAccessToken(username)),
+                    new Cookie(AuthCookieService.CSRF_TOKEN_COOKIE, CSRF_TOKEN)
+            );
+            request.addHeader(AuthCookieService.CSRF_TOKEN_HEADER, CSRF_TOKEN);
+            return request;
+        };
     }
 
     @SpringBootConfiguration

@@ -2,21 +2,23 @@ package com.kindred.emkcrm_project_backend.integration;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kindred.emkcrm_project_backend.api.AuthApiController;
+import com.kindred.emkcrm_project_backend.authentication.AuthCookieService;
 import com.kindred.emkcrm_project_backend.authentication.JwtTokenProvider;
 import com.kindred.emkcrm_project_backend.authentication.PasswordResetService;
+import com.kindred.emkcrm_project_backend.authentication.RefreshTokenService;
 import com.kindred.emkcrm_project_backend.authentication.SecurityConfig;
 import com.kindred.emkcrm_project_backend.authentication.UserDetail;
 import com.kindred.emkcrm_project_backend.authentication.UserService;
 import com.kindred.emkcrm_project_backend.authentication.impl.AuthApiDelegateImpl;
 import com.kindred.emkcrm_project_backend.config.JacksonConfig;
 import com.kindred.emkcrm_project_backend.db.entities.User;
+import com.kindred.emkcrm_project_backend.db.repositories.RefreshTokenRepository;
 import com.kindred.emkcrm_project_backend.exception.AccountDisabledException;
 import com.kindred.emkcrm_project_backend.exception.BadRequestException;
 import com.kindred.emkcrm_project_backend.exception.GlobalExceptionHandler;
 import com.kindred.emkcrm_project_backend.exception.UnauthorizedException;
 import com.kindred.emkcrm_project_backend.model.LoginRequest;
 import com.kindred.emkcrm_project_backend.model.PasswordResetConfirmRequest;
-import com.kindred.emkcrm_project_backend.model.TokenResponse;
 import jakarta.servlet.Filter;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.BeforeEach;
@@ -27,6 +29,7 @@ import org.springframework.boot.flyway.autoconfigure.FlywayAutoConfiguration;
 import org.springframework.boot.hibernate.autoconfigure.HibernateJpaAutoConfiguration;
 import org.springframework.boot.jdbc.autoconfigure.DataSourceAutoConfiguration;
 import org.springframework.context.annotation.Import;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.TestConstructor;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -39,6 +42,7 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -66,6 +70,9 @@ class AuthApiIntegrationTest {
     private PasswordResetService passwordResetService;
 
     @MockitoBean
+    private RefreshTokenRepository refreshTokenRepository;
+
+    @MockitoBean
     private UserDetail userDetail;
 
     AuthApiIntegrationTest(
@@ -86,8 +93,9 @@ class AuthApiIntegrationTest {
     }
 
     @Test
-    void loginReturnsTokenWithoutAuthentication() throws Exception {
+    void loginSetsAuthCookiesWithoutAuthentication() throws Exception {
         User user = new User();
+        user.setId(1L);
         user.setUsername("alice");
         when(userService.validateUsername(any(LoginRequest.class))).thenReturn(user);
 
@@ -95,17 +103,20 @@ class AuthApiIntegrationTest {
         request.setUsername("alice");
         request.setPassword("secret");
 
-        String content = mockMvc.perform(post("/login")
+        var response = mockMvc.perform(post("/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.token").isString())
+                .andExpect(jsonPath("$.message").value("Logged in"))
                 .andReturn()
-                .getResponse()
-                .getContentAsString();
+                .getResponse();
 
-        TokenResponse response = objectMapper.readValue(content, TokenResponse.class);
-        org.assertj.core.api.Assertions.assertThat(jwtTokenProvider.getUsernameFromJWT(response.getToken())).isEqualTo("alice");
+        var setCookieHeaders = response.getHeaders(HttpHeaders.SET_COOKIE);
+        String accessToken = cookieValue(setCookieHeaders, AuthCookieService.ACCESS_TOKEN_COOKIE);
+        assertThat(jwtTokenProvider.getUsernameFromJWT(accessToken)).isEqualTo("alice");
+        assertThat(cookieHeader(setCookieHeaders, AuthCookieService.ACCESS_TOKEN_COOKIE)).contains("HttpOnly");
+        assertThat(cookieHeader(setCookieHeaders, AuthCookieService.REFRESH_TOKEN_COOKIE)).contains("HttpOnly");
+        assertThat(cookieHeader(setCookieHeaders, AuthCookieService.CSRF_TOKEN_COOKIE)).doesNotContain("HttpOnly");
     }
 
     @Test
@@ -183,9 +194,23 @@ class AuthApiIntegrationTest {
             SecurityConfig.class,
             GlobalExceptionHandler.class,
             JwtTokenProvider.class,
+            AuthCookieService.class,
+            RefreshTokenService.class,
             AuthApiController.class,
             AuthApiDelegateImpl.class
     })
     static class TestApplication {
+    }
+
+    private String cookieHeader(java.util.List<String> setCookieHeaders, String cookieName) {
+        return setCookieHeaders.stream()
+                .filter(header -> header.startsWith(cookieName + "="))
+                .findFirst()
+                .orElseThrow();
+    }
+
+    private String cookieValue(java.util.List<String> setCookieHeaders, String cookieName) {
+        String header = cookieHeader(setCookieHeaders, cookieName);
+        return header.substring((cookieName + "=").length(), header.indexOf(';'));
     }
 }

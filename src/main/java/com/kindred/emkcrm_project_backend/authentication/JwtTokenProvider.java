@@ -31,13 +31,18 @@ public class JwtTokenProvider {
         key = Keys.hmacShaKeyFor(secretKey.getBytes());
     }
 
-    public String generateToken(String username) {
+    public String generateAccessToken(String username) {
         return Jwts.builder()
-                .claim("sub", username)
-                .claim("iat", new Date())  // Issued at
-                .claim("exp", new Date(System.currentTimeMillis() + validityInMilliseconds))  // Expiration
-                .signWith(key)// Sign with the SecretKey
+                .subject(username)
+                .claim("token_type", "access")
+                .issuedAt(new Date())
+                .expiration(new Date(System.currentTimeMillis() + validityInMilliseconds))
+                .signWith(key)
                 .compact();
+    }
+
+    public String generateToken(String username) {
+        return generateAccessToken(username);
     }
 
     public String getUsernameFromJWT(String token) {
@@ -52,5 +57,9 @@ public class JwtTokenProvider {
         } catch (Exception e) {
             return false;
         }
+    }
+
+    public long getValidityInSeconds() {
+        return validityInMilliseconds / 1000;
     }
 }

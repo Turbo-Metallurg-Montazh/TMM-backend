@@ -17,7 +17,7 @@
     <description>EMK-CRM_Project_backend</description>
 
     <properties>
-        <java.version>25</java.version>
+        <java.version>26</java.version>
 
         <!-- External libs -->
         <jjwt.version>0.13.0</jjwt.version>
@@ -292,8 +292,7 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.11.0</version>
                 <configuration>
-                    <source>${java.version}</source>
-                    <target>${java.version}</target>
+                    <release>${java.version}</release>
                     <excludes>
                         <exclude>**/generated-sources/**/*Test*.java</exclude>
                         <exclude>**/generated-test-sources/**/*.java</exclude>

@@ -4,6 +4,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.http.MediaType;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -15,6 +16,9 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Configuration
 @EnableWebSecurity
@@ -31,13 +35,15 @@ public class SecurityConfig{
     @Bean
     public SecurityFilterChain securityFilterChain(
             HttpSecurity http,
-            JwtAuthenticationFilter jwtAuthenticationFilter
+            JwtAuthenticationFilter jwtAuthenticationFilter,
+            OriginValidationFilter originValidationFilter,
+            CsrfCookieFilter csrfCookieFilter
     ) {
         http
                 .csrf(AbstractHttpConfigurer::disable)  // Use the new way to disable CSRF
                 .cors(cors -> cors.configurationSource(request -> {
                     var corsConfig = new org.springframework.web.cors.CorsConfiguration();
-                    corsConfig.setAllowedOrigins(java.util.List.of("http://localhost:5173", "https://turbo-metallurg-montazh.ru"));
+                    corsConfig.setAllowedOrigins(originValidationFilter.getAllowedOrigins().stream().toList());
                     corsConfig.setAllowedMethods(java.util.List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
                     corsConfig.setAllowedHeaders(java.util.List.of("*"));
                     corsConfig.setAllowCredentials(true);
@@ -46,7 +52,7 @@ public class SecurityConfig{
                 .authorizeHttpRequests(authorizeRequests ->
                         authorizeRequests
                                 .requestMatchers("/actuator/health/**", "/actuator/info", "/actuator/prometheus").permitAll()
-                                .requestMatchers("/login", "/password-reset/confirm", "/admin/users/reset-password").permitAll() // Allow these URLs
+                                .requestMatchers("/login", "/refresh", "/logout", "/password-reset/confirm", "/admin/users/reset-password").permitAll() // Allow these URLs
                                 .anyRequest().authenticated() // All other requests need to be authenticated
                 )
                 .exceptionHandling(exceptionHandling -> exceptionHandling
@@ -65,7 +71,9 @@ public class SecurityConfig{
                 )
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // No session management
-                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterAfter(originValidationFilter, JwtAuthenticationFilter.class)
+                .addFilterAfter(csrfCookieFilter, JwtAuthenticationFilter.class);
 
         return http.build();
     }
@@ -73,6 +81,22 @@ public class SecurityConfig{
     @Bean
     public JwtAuthenticationFilter jwtAuthenticationFilter(JwtTokenProvider tokenProvider) {
         return new JwtAuthenticationFilter(myUserDetailsService, tokenProvider);
+    }
+
+    @Bean
+    public OriginValidationFilter originValidationFilter(
+            @Value("${security.auth.allowed-origins:http://localhost:5173,https://turbo-metallurg-montazh.ru}") String allowedOrigins
+    ) {
+        Set<String> origins = Arrays.stream(allowedOrigins.split(","))
+                .map(String::trim)
+                .filter(origin -> !origin.isEmpty())
+                .collect(Collectors.toUnmodifiableSet());
+        return new OriginValidationFilter(origins);
+    }
+
+    @Bean
+    public CsrfCookieFilter csrfCookieFilter() {
+        return new CsrfCookieFilter();
     }
 
     @Bean

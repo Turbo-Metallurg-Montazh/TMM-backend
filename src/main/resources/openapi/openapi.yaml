@@ -11,6 +11,12 @@ paths:
   /login:
     $ref: "./contracts/auth/login.yaml#/login"
 
+  /refresh:
+    $ref: "./contracts/auth/login.yaml#/refresh"
+
+  /logout:
+    $ref: "./contracts/auth/login.yaml#/logout"
+
   /password-reset/confirm:
     $ref: "./contracts/auth/login.yaml#/passwordResetConfirm"
 
@@ -56,3 +62,18 @@ paths:
 
   /tender-filters/{filterName}:
     $ref: "./contracts/tenders/tender-filters.yaml#/tenderFilterByName"
+
+  /legal/counterparties:
+    $ref: "./contracts/legal/legal-counterparties.yaml#/legalCounterparties"
+
+  /legal/counterparties/assessment:
+    $ref: "./contracts/legal/legal-counterparties.yaml#/legalCounterpartyAssessment"
+
+  /legal/counterparties/{counterpartyId}:
+    $ref: "./contracts/legal/legal-counterparties.yaml#/legalCounterpartyById"
+
+  /legal/counterparties/{counterpartyId}/checks:
+    $ref: "./contracts/legal/legal-counterparties.yaml#/legalCounterpartyChecks"
+
+  /legal/counterparties/{counterpartyId}/incidents:
+    $ref: "./contracts/legal/legal-counterparties.yaml#/legalCounterpartyIncidents"

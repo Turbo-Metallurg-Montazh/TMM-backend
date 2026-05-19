@@ -32,17 +32,20 @@ public class PasswordResetService {
     private final UserService userService;
     private final EmailService emailService;
     private final EmailProperties emailProperties;
+    private final RefreshTokenService refreshTokenService;
 
     public PasswordResetService(
             PasswordResetTokenRepository passwordResetTokenRepository,
             UserService userService,
             EmailService emailService,
-            EmailProperties emailProperties
+            EmailProperties emailProperties,
+            RefreshTokenService refreshTokenService
     ) {
         this.passwordResetTokenRepository = passwordResetTokenRepository;
         this.userService = userService;
         this.emailService = emailService;
         this.emailProperties = emailProperties;
+        this.refreshTokenService = refreshTokenService;
     }
 
     @Transactional
@@ -91,6 +94,7 @@ public class PasswordResetService {
         token.setUsedAt(now);
         passwordResetTokenRepository.save(token);
         passwordResetTokenRepository.invalidateActiveTokens(user.getId(), now);
+        refreshTokenService.revokeActiveTokens(user);
     }
 
     private String buildResetUrl(String rawToken) {
