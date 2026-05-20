@@ -37,4 +37,4 @@ jobs:
           backend=ghcr.io/turbo-metallurg-montazh/emk-backend:${{ github.sha }} \
           -n backend
           kubectl --kubeconfig=kubeconfig rollout status deployment/emk-backend \
-          -n backend --timeout=300s
+          -n backend --timeout=650s
