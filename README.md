@@ -109,6 +109,7 @@ export SPRING_DATASOURCE_PASSWORD=postgres
 
 Автоочистка reset-токенов:
 - Использованные и просроченные токены из `password_reset_token` удаляются по cron `schedule.password-reset-cleanup-cron` (по умолчанию раз в неделю: в воскресенье в 23:00, `Europe/Moscow`).
+- Отозванные и просроченные refresh-токены из `refresh_token` удаляются по cron `schedule.refresh-token-cleanup-cron` (по умолчанию раз в неделю: в воскресенье в 23:00, `Europe/Moscow`).
 
 Служебный endpoint:
 
