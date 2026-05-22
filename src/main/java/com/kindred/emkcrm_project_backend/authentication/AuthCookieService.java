@@ -18,15 +18,18 @@ public class AuthCookieService {
 
     private final boolean secure;
     private final String sameSite;
+    private final String domain;
     private final JwtTokenProvider jwtTokenProvider;
 
     public AuthCookieService(
             @Value("${security.auth.cookie.secure:true}") boolean secure,
             @Value("${security.auth.cookie.same-site:Strict}") String sameSite,
+            @Value("${security.auth.cookie.domain:}") String domain,
             JwtTokenProvider jwtTokenProvider
     ) {
         this.secure = secure;
         this.sameSite = sameSite;
+        this.domain = domain == null || domain.isBlank() ? null : domain.trim();
         this.jwtTokenProvider = jwtTokenProvider;
     }
 
@@ -49,24 +52,30 @@ public class AuthCookieService {
     }
 
     private void addCookie(HttpServletResponse response, String name, String value, boolean httpOnly, Duration maxAge) {
-        response.addHeader(HttpHeaders.SET_COOKIE, ResponseCookie.from(name, value)
+        var cookie = ResponseCookie.from(name, value)
                 .httpOnly(httpOnly)
                 .secure(secure)
                 .sameSite(sameSite)
                 .path("/")
-                .maxAge(maxAge)
-                .build()
-                .toString());
+                .maxAge(maxAge);
+        addCookieDomain(cookie);
+        response.addHeader(HttpHeaders.SET_COOKIE, cookie.build().toString());
     }
 
     private void clearCookie(HttpServletResponse response, String name, boolean httpOnly) {
-        response.addHeader(HttpHeaders.SET_COOKIE, ResponseCookie.from(name, "")
+        var cookie = ResponseCookie.from(name, "")
                 .httpOnly(httpOnly)
                 .secure(secure)
                 .sameSite(sameSite)
                 .path("/")
-                .maxAge(Duration.ZERO)
-                .build()
-                .toString());
+                .maxAge(Duration.ZERO);
+        addCookieDomain(cookie);
+        response.addHeader(HttpHeaders.SET_COOKIE, cookie.build().toString());
+    }
+
+    private void addCookieDomain(ResponseCookie.ResponseCookieBuilder cookie) {
+        if (domain != null) {
+            cookie.domain(domain);
+        }
     }
 }

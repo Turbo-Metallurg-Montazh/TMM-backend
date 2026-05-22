@@ -54,10 +54,11 @@ springdoc:
 
 security:
   auth:
-    allowed-origins: ${SECURITY_AUTH_ALLOWED_ORIGINS:http://localhost:5173,https://turbo-metallurg-montazh.ru}
+    allowed-origins: ${SECURITY_AUTH_ALLOWED_ORIGINS:http://localhost:5173,http://localhost:5174,http://127.0.0.1:5173,http://127.0.0.1:5174,https://turbo-metallurg-montazh.ru,https://www.turbo-metallurg-montazh.ru}
     cookie:
       secure: ${SECURITY_AUTH_COOKIE_SECURE:true}
       same-site: ${SECURITY_AUTH_COOKIE_SAME_SITE:Strict}
+      domain: ${SECURITY_AUTH_COOKIE_DOMAIN:}
   jwt:
     token:
       secret-key: ${SECURITY_JWT_TOKEN_SECRET_KEY:change-me-change-me-change-me-change-me}
