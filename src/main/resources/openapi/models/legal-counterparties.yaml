@@ -227,6 +227,11 @@ components:
           type: string
         checkedByUsername:
           type: string
+        checkedByUserId:
+          type: integer
+          format: int64
+        checkedByFullName:
+          type: string
         createdAt:
           type: string
           format: date-time
@@ -267,6 +272,11 @@ components:
         impactLevel:
           type: string
         createdByUsername:
+          type: string
+        createdByUserId:
+          type: integer
+          format: int64
+        createdByFullName:
           type: string
         createdAt:
           type: string

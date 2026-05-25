@@ -60,4 +60,10 @@ public class LegalCounterpartyCheck extends AuditableEntity {
 
     @Column(name = "checked_by_username")
     private String checkedByUsername;
+
+    @Column(name = "checked_by_user_id")
+    private Long checkedByUserId;
+
+    @Column(name = "checked_by_full_name")
+    private String checkedByFullName;
 }

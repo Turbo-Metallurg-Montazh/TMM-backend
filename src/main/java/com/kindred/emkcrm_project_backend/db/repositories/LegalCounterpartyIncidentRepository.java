@@ -4,8 +4,11 @@ import com.kindred.emkcrm_project_backend.db.entities.legal.LegalCounterpartyInc
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface LegalCounterpartyIncidentRepository extends JpaRepository<LegalCounterpartyIncident, Long> {
 
     List<LegalCounterpartyIncident> findAllByCounterpartyIdOrderByIncidentDateDescIdDesc(Long counterpartyId);
+
+    Optional<LegalCounterpartyIncident> findByIdAndCounterpartyId(Long id, Long counterpartyId);
 }

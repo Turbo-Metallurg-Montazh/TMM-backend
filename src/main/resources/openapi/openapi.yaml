@@ -77,3 +77,6 @@ paths:
 
   /legal/counterparties/{counterpartyId}/incidents:
     $ref: "./contracts/legal/legal-counterparties.yaml#/legalCounterpartyIncidents"
+
+  /legal/counterparties/{counterpartyId}/incidents/{incidentId}:
+    $ref: "./contracts/legal/legal-counterparties.yaml#/legalCounterpartyIncidentById"

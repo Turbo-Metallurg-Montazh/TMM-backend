@@ -411,6 +411,8 @@ CREATE TABLE IF NOT EXISTS legal_counterparty_check
     risks               TEXT,
     comment             TEXT,
     checked_by_username VARCHAR(255),
+    checked_by_user_id  BIGINT,
+    checked_by_full_name VARCHAR(512),
     created_at          TIMESTAMP   NOT NULL DEFAULT now(),
     updated_at          TIMESTAMP   NOT NULL DEFAULT now(),
     CONSTRAINT chk_legal_counterparty_check_score CHECK (overall_score BETWEEN 0 AND 100),
@@ -429,6 +431,8 @@ CREATE TABLE IF NOT EXISTS legal_counterparty_incident
     description         TEXT,
     impact_level        VARCHAR(16)  NOT NULL DEFAULT 'MEDIUM',
     created_by_username VARCHAR(255),
+    created_by_user_id  BIGINT,
+    created_by_full_name VARCHAR(512),
     created_at          TIMESTAMP    NOT NULL DEFAULT now(),
     updated_at          TIMESTAMP    NOT NULL DEFAULT now(),
     CONSTRAINT chk_legal_counterparty_incident_impact CHECK (impact_level IN ('LOW', 'MEDIUM', 'HIGH', 'CRITICAL'))
@@ -436,6 +440,9 @@ CREATE TABLE IF NOT EXISTS legal_counterparty_incident
 
 CREATE INDEX IF NOT EXISTS idx_legal_counterparty_incident_counterparty
     ON legal_counterparty_incident (counterparty_id, incident_date DESC);
+
+CREATE INDEX IF NOT EXISTS idx_legal_counterparty_incident_created_by_user
+    ON legal_counterparty_incident (created_by_user_id);
 
 CREATE TABLE IF NOT EXISTS legal_counterparty_tender_link
 (
@@ -533,6 +540,7 @@ WITH mapping(role_code, permission_code) AS (
 
         ('STOREKEEPER', 'INVENTORY.NOLIQUID.VIEW'),
         ('STOREKEEPER', 'INVENTORY.NOLIQUID.MANAGE'),
+        ('STOREKEEPER', 'CONTRACTOR.REGISTRY.READ'),
 
         ('RBAC_ADMIN', 'RBAC.ROLE.READ'),
         ('RBAC_ADMIN', 'RBAC.ROLE.WRITE'),

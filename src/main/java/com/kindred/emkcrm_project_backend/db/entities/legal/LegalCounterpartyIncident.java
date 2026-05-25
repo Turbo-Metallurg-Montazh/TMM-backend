@@ -54,4 +54,10 @@ public class LegalCounterpartyIncident extends AuditableEntity {
 
     @Column(name = "created_by_username")
     private String createdByUsername;
+
+    @Column(name = "created_by_user_id")
+    private Long createdByUserId;
+
+    @Column(name = "created_by_full_name")
+    private String createdByFullName;
 }

@@ -468,3 +468,60 @@ legalCounterpartyIncidents:
           application/json:
             schema:
               $ref: "../../models/auth.yaml#/components/schemas/ErrorResponse"
+
+legalCounterpartyIncidentById:
+  put:
+    tags: [LegalCounterparties]
+    summary: Update counterparty incident
+    description: Редактирует инцидент компании. Пользователь без права полного ведения реестра может редактировать только созданный им инцидент.
+    operationId: updateLegalCounterpartyIncident
+    parameters:
+      - in: path
+        name: counterpartyId
+        required: true
+        schema:
+          type: integer
+          format: int64
+      - in: path
+        name: incidentId
+        required: true
+        schema:
+          type: integer
+          format: int64
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../../models/legal-counterparties.yaml#/components/schemas/LegalCounterpartyIncidentCreateRequest"
+    responses:
+      '200':
+        description: Incident updated
+        content:
+          application/json:
+            schema:
+              $ref: "../../models/legal-counterparties.yaml#/components/schemas/LegalCounterpartyIncidentResponse"
+      '400':
+        description: Invalid request
+        content:
+          application/json:
+            schema:
+              $ref: "../../models/auth.yaml#/components/schemas/ErrorResponse"
+      '401':
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: "../../models/auth.yaml#/components/schemas/ErrorResponse"
+      '403':
+        description: Forbidden
+        content:
+          application/json:
+            schema:
+              $ref: "../../models/auth.yaml#/components/schemas/ErrorResponse"
+      '404':
+        description: Counterparty incident not found
+        content:
+          application/json:
+            schema:
+              $ref: "../../models/auth.yaml#/components/schemas/ErrorResponse"

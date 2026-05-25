@@ -1,5 +1,6 @@
 package com.kindred.emkcrm_project_backend.services;
 
+import com.kindred.emkcrm_project_backend.db.entities.User;
 import com.kindred.emkcrm_project_backend.db.entities.legal.CounterpartyRegistryType;
 import com.kindred.emkcrm_project_backend.db.entities.legal.CounterpartyRiskLevel;
 import com.kindred.emkcrm_project_backend.db.entities.legal.LegalCounterparty;
@@ -9,6 +10,7 @@ import com.kindred.emkcrm_project_backend.db.entities.legal.LegalCounterpartyTen
 import com.kindred.emkcrm_project_backend.db.repositories.LegalCounterpartyCheckRepository;
 import com.kindred.emkcrm_project_backend.db.repositories.LegalCounterpartyIncidentRepository;
 import com.kindred.emkcrm_project_backend.db.repositories.LegalCounterpartyRepository;
+import com.kindred.emkcrm_project_backend.db.repositories.UserRepository;
 import com.kindred.emkcrm_project_backend.exception.BadRequestException;
 import com.kindred.emkcrm_project_backend.exception.ConflictException;
 import com.kindred.emkcrm_project_backend.exception.NotFoundException;
@@ -28,6 +30,7 @@ import jakarta.persistence.criteria.Predicate;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -51,15 +54,18 @@ public class LegalCounterpartyService {
     private final LegalCounterpartyRepository counterpartyRepository;
     private final LegalCounterpartyCheckRepository checkRepository;
     private final LegalCounterpartyIncidentRepository incidentRepository;
+    private final UserRepository userRepository;
 
     public LegalCounterpartyService(
             LegalCounterpartyRepository counterpartyRepository,
             LegalCounterpartyCheckRepository checkRepository,
-            LegalCounterpartyIncidentRepository incidentRepository
+            LegalCounterpartyIncidentRepository incidentRepository,
+            UserRepository userRepository
     ) {
         this.counterpartyRepository = counterpartyRepository;
         this.checkRepository = checkRepository;
         this.incidentRepository = incidentRepository;
+        this.userRepository = userRepository;
     }
 
     @Transactional(readOnly = true)
@@ -168,6 +174,7 @@ public class LegalCounterpartyService {
         validateCheckRequest(request);
         LegalCounterparty counterparty = findById(counterpartyId);
 
+        LegalActor actor = currentActor();
         LegalCounterpartyCheck check = new LegalCounterpartyCheck();
         check.setCounterparty(counterparty);
         check.setCheckedAt(toLocalDateTime(request.getCheckedAt()));
@@ -176,7 +183,9 @@ public class LegalCounterpartyService {
         check.setWorkProhibited(Boolean.TRUE.equals(request.getWorkProhibited()));
         check.setRisks(trimToNull(request.getRisks()));
         check.setComment(trimToNull(request.getComment()));
-        check.setCheckedByUsername(currentUsername());
+        check.setCheckedByUsername(actor.username());
+        check.setCheckedByUserId(actor.userId());
+        check.setCheckedByFullName(actor.fullName());
 
         counterparty.setOverallScore(check.getOverallScore());
         counterparty.setRiskLevel(check.getRiskLevel());
@@ -201,10 +210,11 @@ public class LegalCounterpartyService {
     }
 
     @Transactional
-    @PreAuthorize("hasAuthority('CONTRACTOR.REGISTRY.WRITE') or hasAuthority('CONTRACTOR.CHECK_RELIABILITY')")
+    @PreAuthorize("hasAuthority('CONTRACTOR.REGISTRY.READ') or hasAuthority('CONTRACTOR.REGISTRY.WRITE') or hasAuthority('CONTRACTOR.CHECK_RELIABILITY')")
     public LegalCounterpartyIncidentResponse addIncident(Long counterpartyId, LegalCounterpartyIncidentCreateRequest request) {
         validateIncidentRequest(request);
         LegalCounterparty counterparty = findById(counterpartyId);
+        LegalActor actor = currentActor();
 
         LegalCounterpartyIncident incident = new LegalCounterpartyIncident();
         incident.setCounterparty(counterparty);
@@ -212,8 +222,37 @@ public class LegalCounterpartyService {
         incident.setTitle(normalizeRequired(request.getTitle(), "title"));
         incident.setDescription(trimToNull(request.getDescription()));
         incident.setImpactLevel(parseOptionalImpactLevelOrDefault(request.getImpactLevel()));
-        incident.setCreatedByUsername(currentUsername());
+        incident.setCreatedByUsername(actor.username());
+        incident.setCreatedByUserId(actor.userId());
+        incident.setCreatedByFullName(actor.fullName());
 
+        return toIncidentResponse(incidentRepository.save(incident));
+    }
+
+    @Transactional
+    @PreAuthorize("hasAuthority('CONTRACTOR.REGISTRY.READ') or hasAuthority('CONTRACTOR.REGISTRY.WRITE') or hasAuthority('CONTRACTOR.CHECK_RELIABILITY')")
+    public LegalCounterpartyIncidentResponse updateIncident(
+            Long counterpartyId,
+            Long incidentId,
+            LegalCounterpartyIncidentCreateRequest request
+    ) {
+        validateIncidentRequest(request);
+        if (counterpartyId == null) {
+            throw new BadRequestException("counterpartyId is required");
+        }
+        if (incidentId == null) {
+            throw new BadRequestException("incidentId is required");
+        }
+
+        LegalCounterpartyIncident incident = incidentRepository.findByIdAndCounterpartyId(incidentId, counterpartyId)
+                .orElseThrow(() -> new NotFoundException("Инцидент не найден: " + incidentId));
+        LegalActor actor = currentActor();
+        ensureIncidentEditable(incident, actor);
+
+        incident.setIncidentDate(request.getIncidentDate());
+        incident.setTitle(normalizeRequired(request.getTitle(), "title"));
+        incident.setDescription(trimToNull(request.getDescription()));
+        incident.setImpactLevel(parseOptionalImpactLevelOrDefault(request.getImpactLevel()));
         return toIncidentResponse(incidentRepository.save(incident));
     }
 
@@ -415,6 +454,8 @@ public class LegalCounterpartyService {
         response.setRisks(check.getRisks());
         response.setComment(check.getComment());
         response.setCheckedByUsername(check.getCheckedByUsername());
+        response.setCheckedByUserId(check.getCheckedByUserId());
+        response.setCheckedByFullName(check.getCheckedByFullName());
         response.setCreatedAt(toOffsetDateTime(check.getCreatedAt()));
         return response;
     }
@@ -427,6 +468,8 @@ public class LegalCounterpartyService {
         response.setDescription(incident.getDescription());
         response.setImpactLevel(toName(incident.getImpactLevel()));
         response.setCreatedByUsername(incident.getCreatedByUsername());
+        response.setCreatedByUserId(incident.getCreatedByUserId());
+        response.setCreatedByFullName(incident.getCreatedByFullName());
         response.setCreatedAt(toOffsetDateTime(incident.getCreatedAt()));
         response.setUpdatedAt(toOffsetDateTime(incident.getUpdatedAt()));
         return response;
@@ -464,6 +507,44 @@ public class LegalCounterpartyService {
             throw new UnauthorizedException("Unauthorized");
         }
         return authentication.getName();
+    }
+
+    private LegalActor currentActor() {
+        String username = currentUsername();
+        User user = userRepository.findByUsername(username);
+        if (user == null) {
+            return new LegalActor(null, username, username);
+        }
+        return new LegalActor(user.getId(), user.getUsername(), fullName(user));
+    }
+
+    private void ensureIncidentEditable(LegalCounterpartyIncident incident, LegalActor actor) {
+        if (hasRegistryWriteAuthority()) {
+            return;
+        }
+        boolean sameUserId = incident.getCreatedByUserId() != null
+                && actor.userId() != null
+                && incident.getCreatedByUserId().equals(actor.userId());
+        boolean sameUsername = incident.getCreatedByUsername() != null
+                && incident.getCreatedByUsername().equals(actor.username());
+        if (!sameUserId && !sameUsername) {
+            throw new AccessDeniedException("Forbidden");
+        }
+    }
+
+    private boolean hasRegistryWriteAuthority() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        return authentication != null
+                && authentication.getAuthorities().stream()
+                .anyMatch(authority -> "CONTRACTOR.REGISTRY.WRITE".equals(authority.getAuthority()));
+    }
+
+    private String fullName(User user) {
+        String fullName = java.util.stream.Stream.of(user.getLastName(), user.getFirstName(), user.getMiddleName())
+                .filter(value -> value != null && !value.isBlank())
+                .map(String::trim)
+                .collect(java.util.stream.Collectors.joining(" "));
+        return fullName.isBlank() ? user.getUsername() : fullName;
     }
 
     private CounterpartyRegistryType parseRequiredRegistryType(String value) {
@@ -544,5 +625,8 @@ public class LegalCounterpartyService {
     @SuppressWarnings("unused")
     private OffsetDateTime toOffsetDateTime(Instant value) {
         return value == null ? null : OffsetDateTime.ofInstant(value, ZoneOffset.UTC);
+    }
+
+    private record LegalActor(Long userId, String username, String fullName) {
     }
 }

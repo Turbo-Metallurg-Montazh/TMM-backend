@@ -86,6 +86,19 @@ public class LegalCounterpartiesApiDelegateImpl implements LegalCounterpartiesAp
     }
 
     @Override
+    public ResponseEntity<LegalCounterpartyIncidentResponse> updateLegalCounterpartyIncident(
+            Long counterpartyId,
+            Long incidentId,
+            LegalCounterpartyIncidentCreateRequest legalCounterpartyIncidentCreateRequest
+    ) {
+        return ResponseEntity.ok(legalCounterpartyService.updateIncident(
+                counterpartyId,
+                incidentId,
+                legalCounterpartyIncidentCreateRequest
+        ));
+    }
+
+    @Override
     public ResponseEntity<LegalCounterpartyPageResponse> searchLegalCounterparties(
             String query,
             String registryType,

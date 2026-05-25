@@ -10,6 +10,8 @@ import com.kindred.emkcrm_project_backend.config.JacksonConfig;
 import com.kindred.emkcrm_project_backend.exception.GlobalExceptionHandler;
 import com.kindred.emkcrm_project_backend.legal.LegalCounterpartiesApiDelegateImpl;
 import com.kindred.emkcrm_project_backend.model.LegalCounterpartyDetailsResponse;
+import com.kindred.emkcrm_project_backend.model.LegalCounterpartyIncidentCreateRequest;
+import com.kindred.emkcrm_project_backend.model.LegalCounterpartyIncidentResponse;
 import com.kindred.emkcrm_project_backend.model.LegalCounterpartyPageResponse;
 import com.kindred.emkcrm_project_backend.model.LegalCounterpartySummaryResponse;
 import com.kindred.emkcrm_project_backend.model.LegalCounterpartyUpsertRequest;
@@ -43,6 +45,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -159,6 +162,36 @@ class LegalCounterpartiesApiIntegrationTest {
                 .andExpect(jsonPath("$.inn").value("6671000000"));
 
         verify(legalCounterpartyService).create(any(LegalCounterpartyUpsertRequest.class));
+    }
+
+    @Test
+    void updateIncidentRoutesToService() throws Exception {
+        LegalCounterpartyIncidentCreateRequest request = new LegalCounterpartyIncidentCreateRequest();
+        request.setIncidentDate(java.time.LocalDate.of(2026, 5, 25));
+        request.setTitle("Просрочка поставки");
+        request.setImpactLevel("HIGH");
+
+        LegalCounterpartyIncidentResponse response = new LegalCounterpartyIncidentResponse();
+        response.setId(77L);
+        response.setTitle("Просрочка поставки");
+        response.setImpactLevel("HIGH");
+        response.setCreatedByUserId(7L);
+        response.setCreatedByUsername("lawyer");
+        response.setCreatedByFullName("Петров Иван");
+        when(legalCounterpartyService.updateIncident(eq(10L), eq(77L), any(LegalCounterpartyIncidentCreateRequest.class)))
+                .thenReturn(response);
+
+        mockMvc.perform(put("/legal/counterparties/10/incidents/77")
+                        .with(auth("lawyer"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(77))
+                .andExpect(jsonPath("$.impactLevel").value("HIGH"))
+                .andExpect(jsonPath("$.createdByUserId").value(7))
+                .andExpect(jsonPath("$.createdByFullName").value("Петров Иван"));
+
+        verify(legalCounterpartyService).updateIncident(eq(10L), eq(77L), any(LegalCounterpartyIncidentCreateRequest.class));
     }
 
     private RequestPostProcessor auth(String username) {
