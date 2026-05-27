@@ -1,0 +1,343 @@
+components:
+  schemas:
+    TenderWorkflowCreateRequest:
+      type: object
+      properties:
+        purchaseTenderId:
+          type: integer
+          format: int64
+          description: Primary key db_id from purchase_tenders.
+        priority:
+          type: string
+          enum: [LOW, NORMAL, HIGH, URGENT]
+          default: NORMAL
+        responsibleManagerId:
+          type: integer
+          format: int64
+        supplyUserId:
+          type: integer
+          format: int64
+        lawyerUserId:
+          type: integer
+          format: int64
+        approvedById:
+          type: integer
+          format: int64
+        resultComment:
+          type: string
+      required:
+        - purchaseTenderId
+
+    TenderWorkflowUpdateRequest:
+      type: object
+      properties:
+        priority:
+          type: string
+          enum: [LOW, NORMAL, HIGH, URGENT]
+        responsibleManagerId:
+          type: integer
+          format: int64
+        supplyUserId:
+          type: integer
+          format: int64
+        lawyerUserId:
+          type: integer
+          format: int64
+        approvedById:
+          type: integer
+          format: int64
+        rejectionReason:
+          type: string
+        lostReason:
+          type: string
+        resultComment:
+          type: string
+
+    TenderWorkflowStatusChangeRequest:
+      type: object
+      properties:
+        status:
+          type: string
+          enum:
+            - NEW
+            - PROFILE_REVIEW
+            - FEASIBILITY_REVIEW
+            - CONTRACTOR_CHECK
+            - PRICE_CALCULATION
+            - APPROVAL
+            - COMMERCIAL_PROPOSAL_PREPARATION
+            - READY_FOR_BIDDING
+            - BIDDING
+            - CONTRACT_EXECUTION
+            - WAITING_PAYMENT
+            - COMPLETED
+            - LOST
+            - REJECTED
+        comment:
+          type: string
+        rejectionReason:
+          type: string
+        lostReason:
+          type: string
+      required:
+        - status
+
+    TenderWorkflowTenderSummaryResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        purchaseId:
+          type: string
+        sourceType:
+          type: string
+        notificationNumber:
+          type: string
+        title:
+          type: string
+        link:
+          type: string
+        publicationDateTime:
+          type: string
+          format: date-time
+        applicationDeadline:
+          type: string
+          format: date-time
+
+    TenderWorkflowUserResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        username:
+          type: string
+        email:
+          type: string
+        firstName:
+          type: string
+        middleName:
+          type: string
+        lastName:
+          type: string
+        fullName:
+          type: string
+
+    TenderWorkflowSummaryResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        purchaseTenderId:
+          type: integer
+          format: int64
+        purchaseId:
+          type: string
+        notificationNumber:
+          type: string
+        title:
+          type: string
+        status:
+          type: string
+        priority:
+          type: string
+        responsibleManagerId:
+          type: integer
+          format: int64
+        supplyUserId:
+          type: integer
+          format: int64
+        lawyerUserId:
+          type: integer
+          format: int64
+        approvedById:
+          type: integer
+          format: int64
+        rejectionReason:
+          type: string
+        lostReason:
+          type: string
+        resultComment:
+          type: string
+        createdById:
+          type: integer
+          format: int64
+        updatedById:
+          type: integer
+          format: int64
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    TenderWorkflowDetailsResponse:
+      allOf:
+        - $ref: "#/components/schemas/TenderWorkflowSummaryResponse"
+        - type: object
+          properties:
+            purchaseTender:
+              $ref: "#/components/schemas/TenderWorkflowTenderSummaryResponse"
+            responsibleManager:
+              $ref: "#/components/schemas/TenderWorkflowUserResponse"
+            supplyUser:
+              $ref: "#/components/schemas/TenderWorkflowUserResponse"
+            lawyerUser:
+              $ref: "#/components/schemas/TenderWorkflowUserResponse"
+            approvedBy:
+              $ref: "#/components/schemas/TenderWorkflowUserResponse"
+            createdBy:
+              $ref: "#/components/schemas/TenderWorkflowUserResponse"
+            updatedBy:
+              $ref: "#/components/schemas/TenderWorkflowUserResponse"
+
+    TenderWorkflowPageResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/TenderWorkflowSummaryResponse"
+        page:
+          type: integer
+          format: int32
+        size:
+          type: integer
+          format: int32
+        totalElements:
+          type: integer
+          format: int64
+        totalPages:
+          type: integer
+          format: int32
+
+    TenderWorkflowStatusHistoryResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        workflowId:
+          type: integer
+          format: int64
+        oldStatus:
+          type: string
+        newStatus:
+          type: string
+        changedById:
+          type: integer
+          format: int64
+        comment:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+
+    TenderWorkflowCommentCreateRequest:
+      type: object
+      properties:
+        commentType:
+          type: string
+          enum: [GENERAL, PROFILE_REVIEW, FEASIBILITY_REVIEW, LEGAL, SUPPLY, APPROVAL, BIDDING, EXECUTION]
+          default: GENERAL
+        text:
+          type: string
+      required:
+        - text
+
+    TenderWorkflowCommentUpdateRequest:
+      type: object
+      properties:
+        commentType:
+          type: string
+          enum: [GENERAL, PROFILE_REVIEW, FEASIBILITY_REVIEW, LEGAL, SUPPLY, APPROVAL, BIDDING, EXECUTION]
+        text:
+          type: string
+      required:
+        - text
+
+    TenderWorkflowCommentResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        workflowId:
+          type: integer
+          format: int64
+        authorId:
+          type: integer
+          format: int64
+        commentType:
+          type: string
+        text:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    TenderWorkflowFileCreateRequest:
+      type: object
+      properties:
+        fileName:
+          type: string
+        fileType:
+          type: string
+        storagePath:
+          type: string
+      required:
+        - fileName
+        - storagePath
+
+    TenderWorkflowFileResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        workflowId:
+          type: integer
+          format: int64
+        uploadedById:
+          type: integer
+          format: int64
+        fileName:
+          type: string
+        fileType:
+          type: string
+        storagePath:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+
+    TenderWorkflowCounterpartyLinkRequest:
+      type: object
+      properties:
+        counterpartyId:
+          type: integer
+          format: int64
+          description: Existing counterparty id. If omitted, createCounterparty is used.
+        createCounterparty:
+          $ref: "./legal-counterparties.yaml#/components/schemas/LegalCounterpartyUpsertRequest"
+        relationType:
+          type: string
+          default: CUSTOMER
+
+    TenderWorkflowCounterpartyCheckRequest:
+      type: object
+      properties:
+        counterpartyId:
+          type: integer
+          format: int64
+          description: Existing linked counterparty id. If omitted, the first linked counterparty is used.
+        check:
+          $ref: "./legal-counterparties.yaml#/components/schemas/LegalCounterpartyCheckCreateRequest"
+      required:
+        - check

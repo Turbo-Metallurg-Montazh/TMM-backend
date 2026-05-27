@@ -80,3 +80,36 @@ paths:
 
   /legal/counterparties/{counterpartyId}/incidents/{incidentId}:
     $ref: "./contracts/legal/legal-counterparties.yaml#/legalCounterpartyIncidentById"
+
+  /api/tender-workflows:
+    $ref: "./contracts/tender-workflows/tender-workflows.yaml#/tenderWorkflows"
+
+  /api/tender-workflows/{id}:
+    $ref: "./contracts/tender-workflows/tender-workflows.yaml#/tenderWorkflowById"
+
+  /api/tender-workflows/{id}/status:
+    $ref: "./contracts/tender-workflows/tender-workflows.yaml#/tenderWorkflowStatus"
+
+  /api/tender-workflows/{id}/history:
+    $ref: "./contracts/tender-workflows/tender-workflows.yaml#/tenderWorkflowHistory"
+
+  /api/tender-workflows/{id}/comments:
+    $ref: "./contracts/tender-workflows/tender-workflows.yaml#/tenderWorkflowComments"
+
+  /api/tender-workflows/{id}/comments/{commentId}:
+    $ref: "./contracts/tender-workflows/tender-workflows.yaml#/tenderWorkflowCommentById"
+
+  /api/tender-workflows/{id}/files:
+    $ref: "./contracts/tender-workflows/tender-workflows.yaml#/tenderWorkflowFiles"
+
+  /api/tender-workflows/{id}/files/{fileId}:
+    $ref: "./contracts/tender-workflows/tender-workflows.yaml#/tenderWorkflowFileById"
+
+  /api/tender-workflows/{id}/counterparty:
+    $ref: "./contracts/tender-workflows/tender-workflows.yaml#/tenderWorkflowCounterparty"
+
+  /api/tender-workflows/{id}/counterparty-link:
+    $ref: "./contracts/tender-workflows/tender-workflows.yaml#/tenderWorkflowCounterpartyLink"
+
+  /api/tender-workflows/{id}/counterparty-check:
+    $ref: "./contracts/tender-workflows/tender-workflows.yaml#/tenderWorkflowCounterpartyCheck"

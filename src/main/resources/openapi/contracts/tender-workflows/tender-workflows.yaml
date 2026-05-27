@@ -1,0 +1,590 @@
+tenderWorkflows:
+  get:
+    tags: [TenderWorkflows]
+    summary: List tender workflows
+    operationId: listTenderWorkflows
+    parameters:
+      - in: query
+        name: status
+        schema:
+          type: string
+      - in: query
+        name: priority
+        schema:
+          type: string
+      - in: query
+        name: responsibleManagerId
+        schema:
+          type: integer
+          format: int64
+      - in: query
+        name: supplyUserId
+        schema:
+          type: integer
+          format: int64
+      - in: query
+        name: lawyerUserId
+        schema:
+          type: integer
+          format: int64
+      - in: query
+        name: purchaseTenderId
+        schema:
+          type: integer
+          format: int64
+      - in: query
+        name: notificationNumber
+        schema:
+          type: string
+      - in: query
+        name: inn
+        schema:
+          type: string
+      - in: query
+        name: dateFrom
+        schema:
+          type: string
+          format: date-time
+      - in: query
+        name: dateTo
+        schema:
+          type: string
+          format: date-time
+      - in: query
+        name: page
+        schema:
+          type: integer
+          format: int32
+          default: 0
+          minimum: 0
+      - in: query
+        name: size
+        schema:
+          type: integer
+          format: int32
+          default: 20
+          minimum: 1
+          maximum: 100
+      - in: query
+        name: sort
+        schema:
+          type: string
+          default: updatedAt
+      - in: query
+        name: direction
+        schema:
+          type: string
+          default: DESC
+    responses:
+      '200':
+        description: Workflow page
+        content:
+          application/json:
+            schema:
+              $ref: "../../models/tender-workflows.yaml#/components/schemas/TenderWorkflowPageResponse"
+      '401':
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: "../../models/auth.yaml#/components/schemas/ErrorResponse"
+      '403':
+        description: Forbidden
+        content:
+          application/json:
+            schema:
+              $ref: "../../models/auth.yaml#/components/schemas/ErrorResponse"
+  post:
+    tags: [TenderWorkflows]
+    summary: Create tender workflow
+    operationId: createTenderWorkflow
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../../models/tender-workflows.yaml#/components/schemas/TenderWorkflowCreateRequest"
+    responses:
+      '201':
+        description: Workflow created
+        content:
+          application/json:
+            schema:
+              $ref: "../../models/tender-workflows.yaml#/components/schemas/TenderWorkflowDetailsResponse"
+      '400':
+        description: Invalid request
+        content:
+          application/json:
+            schema:
+              $ref: "../../models/auth.yaml#/components/schemas/ErrorResponse"
+      '401':
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: "../../models/auth.yaml#/components/schemas/ErrorResponse"
+      '403':
+        description: Forbidden
+        content:
+          application/json:
+            schema:
+              $ref: "../../models/auth.yaml#/components/schemas/ErrorResponse"
+      '404':
+        description: Purchase tender not found
+        content:
+          application/json:
+            schema:
+              $ref: "../../models/auth.yaml#/components/schemas/ErrorResponse"
+      '409':
+        description: Workflow already exists for tender
+        content:
+          application/json:
+            schema:
+              $ref: "../../models/auth.yaml#/components/schemas/ErrorResponse"
+
+tenderWorkflowById:
+  get:
+    tags: [TenderWorkflows]
+    summary: Get tender workflow by id
+    operationId: getTenderWorkflowById
+    parameters:
+      - $ref: "#/components/parameters/WorkflowId"
+    responses:
+      '200':
+        description: Workflow details
+        content:
+          application/json:
+            schema:
+              $ref: "../../models/tender-workflows.yaml#/components/schemas/TenderWorkflowDetailsResponse"
+      '401':
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: "../../models/auth.yaml#/components/schemas/ErrorResponse"
+      '403':
+        description: Forbidden
+        content:
+          application/json:
+            schema:
+              $ref: "../../models/auth.yaml#/components/schemas/ErrorResponse"
+      '404':
+        description: Workflow not found
+        content:
+          application/json:
+            schema:
+              $ref: "../../models/auth.yaml#/components/schemas/ErrorResponse"
+  patch:
+    tags: [TenderWorkflows]
+    summary: Update tender workflow
+    operationId: updateTenderWorkflow
+    parameters:
+      - $ref: "#/components/parameters/WorkflowId"
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../../models/tender-workflows.yaml#/components/schemas/TenderWorkflowUpdateRequest"
+    responses:
+      '200':
+        description: Workflow updated
+        content:
+          application/json:
+            schema:
+              $ref: "../../models/tender-workflows.yaml#/components/schemas/TenderWorkflowDetailsResponse"
+      '400':
+        description: Invalid request
+        content:
+          application/json:
+            schema:
+              $ref: "../../models/auth.yaml#/components/schemas/ErrorResponse"
+      '401':
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: "../../models/auth.yaml#/components/schemas/ErrorResponse"
+      '403':
+        description: Forbidden
+        content:
+          application/json:
+            schema:
+              $ref: "../../models/auth.yaml#/components/schemas/ErrorResponse"
+      '404':
+        description: Workflow not found
+        content:
+          application/json:
+            schema:
+              $ref: "../../models/auth.yaml#/components/schemas/ErrorResponse"
+
+tenderWorkflowStatus:
+  post:
+    tags: [TenderWorkflows]
+    summary: Change tender workflow status
+    operationId: changeTenderWorkflowStatus
+    parameters:
+      - $ref: "#/components/parameters/WorkflowId"
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../../models/tender-workflows.yaml#/components/schemas/TenderWorkflowStatusChangeRequest"
+    responses:
+      '200':
+        description: Workflow status changed
+        content:
+          application/json:
+            schema:
+              $ref: "../../models/tender-workflows.yaml#/components/schemas/TenderWorkflowDetailsResponse"
+      '400':
+        description: Invalid status transition
+        content:
+          application/json:
+            schema:
+              $ref: "../../models/auth.yaml#/components/schemas/ErrorResponse"
+      '401':
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: "../../models/auth.yaml#/components/schemas/ErrorResponse"
+      '403':
+        description: Forbidden
+        content:
+          application/json:
+            schema:
+              $ref: "../../models/auth.yaml#/components/schemas/ErrorResponse"
+      '404':
+        description: Workflow not found
+        content:
+          application/json:
+            schema:
+              $ref: "../../models/auth.yaml#/components/schemas/ErrorResponse"
+
+tenderWorkflowHistory:
+  get:
+    tags: [TenderWorkflows]
+    summary: List tender workflow status history
+    operationId: listTenderWorkflowHistory
+    parameters:
+      - $ref: "#/components/parameters/WorkflowId"
+    responses:
+      '200':
+        description: Status history
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: "../../models/tender-workflows.yaml#/components/schemas/TenderWorkflowStatusHistoryResponse"
+      '401':
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: "../../models/auth.yaml#/components/schemas/ErrorResponse"
+      '403':
+        description: Forbidden
+        content:
+          application/json:
+            schema:
+              $ref: "../../models/auth.yaml#/components/schemas/ErrorResponse"
+      '404':
+        description: Workflow not found
+        content:
+          application/json:
+            schema:
+              $ref: "../../models/auth.yaml#/components/schemas/ErrorResponse"
+
+tenderWorkflowComments:
+  get:
+    tags: [TenderWorkflows]
+    summary: List tender workflow comments
+    operationId: listTenderWorkflowComments
+    parameters:
+      - $ref: "#/components/parameters/WorkflowId"
+    responses:
+      '200':
+        description: Comments
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: "../../models/tender-workflows.yaml#/components/schemas/TenderWorkflowCommentResponse"
+      '401':
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: "../../models/auth.yaml#/components/schemas/ErrorResponse"
+      '403':
+        description: Forbidden
+        content:
+          application/json:
+            schema:
+              $ref: "../../models/auth.yaml#/components/schemas/ErrorResponse"
+  post:
+    tags: [TenderWorkflows]
+    summary: Add tender workflow comment
+    operationId: addTenderWorkflowComment
+    parameters:
+      - $ref: "#/components/parameters/WorkflowId"
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../../models/tender-workflows.yaml#/components/schemas/TenderWorkflowCommentCreateRequest"
+    responses:
+      '201':
+        description: Comment created
+        content:
+          application/json:
+            schema:
+              $ref: "../../models/tender-workflows.yaml#/components/schemas/TenderWorkflowCommentResponse"
+      '400':
+        description: Invalid request
+        content:
+          application/json:
+            schema:
+              $ref: "../../models/auth.yaml#/components/schemas/ErrorResponse"
+      '401':
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: "../../models/auth.yaml#/components/schemas/ErrorResponse"
+      '403':
+        description: Forbidden
+        content:
+          application/json:
+            schema:
+              $ref: "../../models/auth.yaml#/components/schemas/ErrorResponse"
+
+tenderWorkflowCommentById:
+  patch:
+    tags: [TenderWorkflows]
+    summary: Update tender workflow comment
+    operationId: updateTenderWorkflowComment
+    parameters:
+      - $ref: "#/components/parameters/WorkflowId"
+      - $ref: "#/components/parameters/CommentId"
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../../models/tender-workflows.yaml#/components/schemas/TenderWorkflowCommentUpdateRequest"
+    responses:
+      '200':
+        description: Comment updated
+        content:
+          application/json:
+            schema:
+              $ref: "../../models/tender-workflows.yaml#/components/schemas/TenderWorkflowCommentResponse"
+      '400':
+        description: Invalid request
+        content:
+          application/json:
+            schema:
+              $ref: "../../models/auth.yaml#/components/schemas/ErrorResponse"
+      '401':
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: "../../models/auth.yaml#/components/schemas/ErrorResponse"
+      '403':
+        description: Forbidden
+        content:
+          application/json:
+            schema:
+              $ref: "../../models/auth.yaml#/components/schemas/ErrorResponse"
+      '404':
+        description: Comment not found
+        content:
+          application/json:
+            schema:
+              $ref: "../../models/auth.yaml#/components/schemas/ErrorResponse"
+  delete:
+    tags: [TenderWorkflows]
+    summary: Delete tender workflow comment
+    operationId: deleteTenderWorkflowComment
+    parameters:
+      - $ref: "#/components/parameters/WorkflowId"
+      - $ref: "#/components/parameters/CommentId"
+    responses:
+      '200':
+        description: Comment deleted
+        content:
+          application/json:
+            schema:
+              $ref: "../../models/auth.yaml#/components/schemas/MessageResponse"
+      '401':
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: "../../models/auth.yaml#/components/schemas/ErrorResponse"
+      '403':
+        description: Forbidden
+        content:
+          application/json:
+            schema:
+              $ref: "../../models/auth.yaml#/components/schemas/ErrorResponse"
+      '404':
+        description: Comment not found
+        content:
+          application/json:
+            schema:
+              $ref: "../../models/auth.yaml#/components/schemas/ErrorResponse"
+
+tenderWorkflowFiles:
+  get:
+    tags: [TenderWorkflows]
+    summary: List tender workflow files
+    operationId: listTenderWorkflowFiles
+    parameters:
+      - $ref: "#/components/parameters/WorkflowId"
+    responses:
+      '200':
+        description: Files
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: "../../models/tender-workflows.yaml#/components/schemas/TenderWorkflowFileResponse"
+  post:
+    tags: [TenderWorkflows]
+    summary: Add tender workflow file metadata
+    operationId: addTenderWorkflowFile
+    parameters:
+      - $ref: "#/components/parameters/WorkflowId"
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../../models/tender-workflows.yaml#/components/schemas/TenderWorkflowFileCreateRequest"
+    responses:
+      '201':
+        description: File metadata created
+        content:
+          application/json:
+            schema:
+              $ref: "../../models/tender-workflows.yaml#/components/schemas/TenderWorkflowFileResponse"
+      '400':
+        description: Invalid request
+        content:
+          application/json:
+            schema:
+              $ref: "../../models/auth.yaml#/components/schemas/ErrorResponse"
+
+tenderWorkflowFileById:
+  delete:
+    tags: [TenderWorkflows]
+    summary: Delete tender workflow file metadata
+    operationId: deleteTenderWorkflowFile
+    parameters:
+      - $ref: "#/components/parameters/WorkflowId"
+      - $ref: "#/components/parameters/FileId"
+    responses:
+      '200':
+        description: File deleted
+        content:
+          application/json:
+            schema:
+              $ref: "../../models/auth.yaml#/components/schemas/MessageResponse"
+      '404':
+        description: File not found
+        content:
+          application/json:
+            schema:
+              $ref: "../../models/auth.yaml#/components/schemas/ErrorResponse"
+
+tenderWorkflowCounterparty:
+  get:
+    tags: [TenderWorkflows]
+    summary: List counterparties linked to tender workflow
+    operationId: listTenderWorkflowCounterparties
+    parameters:
+      - $ref: "#/components/parameters/WorkflowId"
+    responses:
+      '200':
+        description: Linked counterparties
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: "../../models/legal-counterparties.yaml#/components/schemas/LegalCounterpartySummaryResponse"
+
+tenderWorkflowCounterpartyLink:
+  post:
+    tags: [TenderWorkflows]
+    summary: Link counterparty to tender workflow
+    operationId: linkTenderWorkflowCounterparty
+    parameters:
+      - $ref: "#/components/parameters/WorkflowId"
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../../models/tender-workflows.yaml#/components/schemas/TenderWorkflowCounterpartyLinkRequest"
+    responses:
+      '200':
+        description: Linked counterparty
+        content:
+          application/json:
+            schema:
+              $ref: "../../models/legal-counterparties.yaml#/components/schemas/LegalCounterpartyDetailsResponse"
+
+tenderWorkflowCounterpartyCheck:
+  post:
+    tags: [TenderWorkflows]
+    summary: Add legal check for linked counterparty
+    operationId: createTenderWorkflowCounterpartyCheck
+    parameters:
+      - $ref: "#/components/parameters/WorkflowId"
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../../models/tender-workflows.yaml#/components/schemas/TenderWorkflowCounterpartyCheckRequest"
+    responses:
+      '201':
+        description: Counterparty check created
+        content:
+          application/json:
+            schema:
+              $ref: "../../models/legal-counterparties.yaml#/components/schemas/LegalCounterpartyCheckResponse"
+
+components:
+  parameters:
+    WorkflowId:
+      in: path
+      name: id
+      required: true
+      schema:
+        type: integer
+        format: int64
+    CommentId:
+      in: path
+      name: commentId
+      required: true
+      schema:
+        type: integer
+        format: int64
+    FileId:
+      in: path
+      name: fileId
+      required: true
+      schema:
+        type: integer
+        format: int64
