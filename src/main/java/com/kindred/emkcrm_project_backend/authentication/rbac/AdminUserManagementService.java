@@ -68,7 +68,7 @@ public class AdminUserManagementService {
     }
 
     @Transactional(readOnly = true)
-    @PreAuthorize("hasAuthority('RBAC.USER.READ')")
+    @PreAuthorize("isAuthenticated()")
     public List<AdminUserDto> listUsers() {
         List<User> users = userRepository.findAll();
         Map<Long, Set<Role>> roleMap = rbacService.findRolesByUserIds(users.stream().map(User::getId).collect(Collectors.toSet()));
@@ -78,7 +78,7 @@ public class AdminUserManagementService {
     }
 
     @Transactional(readOnly = true)
-    @PreAuthorize("hasAuthority('RBAC.USER.READ')")
+    @PreAuthorize("isAuthenticated()")
     public AdminUserDto getUserByUsername(String username) {
         User user = requireUser(username);
         Set<Role> roles = rbacService.findRolesByUsername(username);

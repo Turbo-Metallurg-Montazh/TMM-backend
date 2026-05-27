@@ -11,4 +11,5 @@ public final class RbacRoleCodes {
     public static final String LAWYER = "LAWYER";
     public static final String STOREKEEPER = "STOREKEEPER";
     public static final String RBAC_ADMIN = "RBAC_ADMIN";
+    public static final String DEVELOPER = "DEVELOPER";
 }

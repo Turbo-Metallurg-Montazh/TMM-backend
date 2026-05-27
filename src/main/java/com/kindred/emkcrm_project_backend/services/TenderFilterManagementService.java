@@ -83,14 +83,14 @@ public class TenderFilterManagementService {
         return filterName;
     }
 
-    @PreAuthorize("hasAuthority('TENDER_FILTER.WRITE')")
+    @PreAuthorize("isAuthenticated()")
     public List<TenderFilterSummaryResponse> listTenderFilters() {
         return tenderFilterRepository.findAll(Sort.by(Sort.Direction.ASC, "name")).stream()
                 .map(this::toSummaryResponse)
                 .collect(Collectors.toList());
     }
 
-    @PreAuthorize("hasAuthority('TENDER_FILTER.WRITE')")
+    @PreAuthorize("isAuthenticated()")
     public TenderFilterDetailsResponse getTenderFilterByName(String filterName) {
         return toDetailsResponse(findByName(filterName));
     }

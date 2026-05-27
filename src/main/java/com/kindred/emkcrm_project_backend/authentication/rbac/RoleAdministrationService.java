@@ -33,13 +33,13 @@ public class RoleAdministrationService {
     }
 
     @Transactional(readOnly = true)
-    @PreAuthorize("hasAuthority('RBAC.ROLE.READ')")
+    @PreAuthorize("isAuthenticated()")
     public List<Role> listRolesWithPermissions() {
         return rbacService.listRolesWithPermissions();
     }
 
     @Transactional(readOnly = true)
-    @PreAuthorize("hasAuthority('RBAC.PERMISSION.READ')")
+    @PreAuthorize("isAuthenticated()")
     public List<Permission> listPermissions() {
         return rbacService.listPermissions();
     }

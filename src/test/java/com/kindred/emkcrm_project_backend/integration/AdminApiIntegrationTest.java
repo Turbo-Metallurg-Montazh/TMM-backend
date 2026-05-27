@@ -50,7 +50,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -148,47 +147,27 @@ class AdminApiIntegrationTest {
     }
 
     @Test
-    void listUsersReturnsForbiddenWithoutReadAuthority() throws Exception {
-        mockMvc.perform(get("/admin/users")
-                        .with(auth("regular")))
-                .andExpect(status().isForbidden())
-                .andExpect(jsonPath("$.error").value("Forbidden"));
-
-        verifyNoInteractions(userRepository, rbacService);
-    }
-
-    @Test
-    void listUsersReturnsPayloadForReader() throws Exception {
+    void listUsersReturnsPayloadForAnyAuthenticatedUser() throws Exception {
         User user = userEntity(1L, "alice", "alice@example.com");
         when(userRepository.findAll()).thenReturn(List.of(user));
         when(rbacService.findRolesByUserIds(Set.of(1L))).thenReturn(Map.of(1L, Set.of()));
 
         mockMvc.perform(get("/admin/users")
-                        .with(auth("reader")))
+                        .with(auth("regular")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].username").value("alice"))
                 .andExpect(jsonPath("$[0].email").value("alice@example.com"));
     }
 
     @Test
-    void listPermissionsReturnsForbiddenWithoutPermissionReadAuthority() throws Exception {
-        mockMvc.perform(get("/admin/permissions")
-                        .with(auth("regular")))
-                .andExpect(status().isForbidden())
-                .andExpect(jsonPath("$.error").value("Forbidden"));
-
-        verifyNoInteractions(rbacService);
-    }
-
-    @Test
-    void listPermissionsReturnsPayloadForPermissionReader() throws Exception {
+    void listPermissionsReturnsPayloadForAnyAuthenticatedUser() throws Exception {
         Permission permission = new Permission();
         permission.setCode("RBAC.USER.READ");
         permission.setDescription("Read users");
         when(rbacService.listPermissions()).thenReturn(List.of(permission));
 
         mockMvc.perform(get("/admin/permissions")
-                        .with(auth("permission-reader")))
+                        .with(auth("regular")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].code").value("RBAC.USER.READ"))
                 .andExpect(jsonPath("$[0].description").value("Read users"));

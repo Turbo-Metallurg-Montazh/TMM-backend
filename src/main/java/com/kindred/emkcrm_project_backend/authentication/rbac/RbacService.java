@@ -175,9 +175,11 @@ public class RbacService {
             throw new BadRequestException("Role code/name must not be blank");
         }
 
-        String normalizedCode = roleCodeOrName.trim().toUpperCase(Locale.ROOT);
-        return roleRepository.findByCodeWithPermissions(normalizedCode)
-                .or(() -> roleRepository.findByName(roleCodeOrName.trim()))
+        String trimmedRoleCodeOrName = roleCodeOrName.trim();
+        String normalizedCode = trimmedRoleCodeOrName.toUpperCase(Locale.ROOT);
+        return roleRepository.findByCodeWithPermissions(trimmedRoleCodeOrName)
+                .or(() -> roleRepository.findByCodeWithPermissions(normalizedCode))
+                .or(() -> roleRepository.findByName(trimmedRoleCodeOrName))
                 .orElseThrow(() -> new NotFoundException("Role not found: " + roleCodeOrName));
     }
 

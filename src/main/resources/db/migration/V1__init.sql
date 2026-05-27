@@ -505,7 +505,8 @@ WITH role_templates(code, name, is_system) AS (
            ('PROCUREMENT_SPECIALIST', 'Специалист отдела снабжения', TRUE),
            ('LAWYER', 'Юрист', TRUE),
            ('STOREKEEPER', 'Кладовщик', TRUE),
-           ('RBAC_ADMIN', 'Администратор прав доступа', TRUE)
+           ('RBAC_ADMIN', 'Администратор прав доступа', TRUE),
+           ('DEVELOPER', 'Разработчик системы', TRUE)
 )
 INSERT
 INTO roles (code, name, is_system, created_at, updated_at)
@@ -559,4 +560,12 @@ SELECT r.role_id, p.id
 FROM roles r
          JOIN mapping m ON m.role_code = r.code
          JOIN permission p ON p.code = m.permission_code
+ON CONFLICT DO NOTHING;
+
+INSERT
+INTO role_permission (role_id, permission_id)
+SELECT r.role_id, p.id
+FROM roles r
+         CROSS JOIN permission p
+WHERE r.code = 'DEVELOPER'
 ON CONFLICT DO NOTHING;

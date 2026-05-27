@@ -69,7 +69,7 @@ public class LegalCounterpartyService {
     }
 
     @Transactional(readOnly = true)
-    @PreAuthorize("hasAuthority('CONTRACTOR.REGISTRY.READ') or hasAuthority('CONTRACTOR.VIEW_REPORTS')")
+    @PreAuthorize("isAuthenticated()")
     public LegalCounterpartyPageResponse search(
             String query,
             String registryType,
@@ -141,7 +141,7 @@ public class LegalCounterpartyService {
     }
 
     @Transactional(readOnly = true)
-    @PreAuthorize("hasAuthority('CONTRACTOR.REGISTRY.READ') or hasAuthority('CONTRACTOR.VIEW_REPORTS')")
+    @PreAuthorize("isAuthenticated()")
     public LegalCounterpartyDetailsResponse getById(Long counterpartyId) {
         return toDetailsResponse(findByIdWithDetails(counterpartyId));
     }
@@ -201,7 +201,7 @@ public class LegalCounterpartyService {
     }
 
     @Transactional(readOnly = true)
-    @PreAuthorize("hasAuthority('CONTRACTOR.REGISTRY.READ') or hasAuthority('CONTRACTOR.VIEW_REPORTS')")
+    @PreAuthorize("isAuthenticated()")
     public List<LegalCounterpartyCheckResponse> listChecks(Long counterpartyId) {
         ensureExists(counterpartyId);
         return checkRepository.findAllByCounterpartyIdOrderByCheckedAtDescIdDesc(counterpartyId).stream()
@@ -257,7 +257,7 @@ public class LegalCounterpartyService {
     }
 
     @Transactional(readOnly = true)
-    @PreAuthorize("hasAuthority('CONTRACTOR.REGISTRY.READ') or hasAuthority('CONTRACTOR.VIEW_REPORTS')")
+    @PreAuthorize("isAuthenticated()")
     public List<LegalCounterpartyIncidentResponse> listIncidents(Long counterpartyId) {
         ensureExists(counterpartyId);
         return incidentRepository.findAllByCounterpartyIdOrderByIncidentDateDescIdDesc(counterpartyId).stream()
@@ -266,7 +266,7 @@ public class LegalCounterpartyService {
     }
 
     @Transactional(readOnly = true)
-    @PreAuthorize("hasAuthority('CONTRACTOR.REGISTRY.READ') or hasAuthority('OFFER.CALCULATE') or hasAuthority('CONTRACTOR.VIEW_REPORTS')")
+    @PreAuthorize("isAuthenticated()")
     public LegalCounterpartyAssessmentResponse getAssessment(String inn) {
         String normalizedInn = normalizeRequired(inn, "inn");
         LegalCounterparty counterparty = counterpartyRepository.findByInn(normalizedInn)

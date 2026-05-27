@@ -46,7 +46,7 @@ public class TenderFilterExportService {
         this.clock = clock;
     }
 
-    @PreAuthorize("hasAuthority('TENDER_FILTER.WRITE')")
+    @PreAuthorize("isAuthenticated()")
     public ExportTendersByFilterResponse exportTendersByFilter(ExportTendersByFilterRequest request) {
         validateRequest(request);
 
