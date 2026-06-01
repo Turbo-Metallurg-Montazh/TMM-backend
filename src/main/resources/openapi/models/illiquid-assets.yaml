@@ -14,10 +14,22 @@ components:
           exclusiveMinimum: true
         description:
           type: string
+        inflowReason:
+          type: string
+          enum:
+            - TENDER_PURCHASE
+            - INVENTORY_FOUND
+            - RETURN
+            - OTHER
+        tenderLink:
+          type: string
+        comment:
+          type: string
       required:
         - name
         - unitOfMeasurement
         - quantity
+        - inflowReason
 
     IlliquidAssetUpdateRequest:
       type: object

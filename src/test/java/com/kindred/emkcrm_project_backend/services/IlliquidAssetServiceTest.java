@@ -68,7 +68,12 @@ class IlliquidAssetServiceTest {
 
     @Test
     void createSavesOpenAssetAndCreationHistory() {
-        IlliquidAssetCreateRequest request = new IlliquidAssetCreateRequest("Кабель", "м", 12.5f);
+        IlliquidAssetCreateRequest request = new IlliquidAssetCreateRequest(
+                "Кабель",
+                "м",
+                12.5f,
+                IlliquidAssetCreateRequest.InflowReasonEnum.INVENTORY_FOUND
+        );
         request.setDescription("Остаток бухты");
         when(assetRepository.save(any(IlliquidAssets.class))).thenAnswer(invocation -> {
             IlliquidAssets saved = invocation.getArgument(0);
@@ -87,14 +92,19 @@ class IlliquidAssetServiceTest {
         assertThat(history.getOldQuantity()).isEqualTo(0);
         assertThat(history.getNewQuantity()).isEqualTo(12.5f);
         assertThat(history.getQuantityDelta()).isEqualTo(12.5f);
-        assertThat(history.getReason()).isEqualTo("CREATION");
+        assertThat(history.getReason()).isEqualTo("INVENTORY_FOUND");
         assertThat(history.getChangedById()).isEqualTo(7L);
         assertThat(history.getChangedByUsername()).isEqualTo("warehouse.user");
     }
 
     @Test
     void createRejectsZeroQuantityBecauseClosedItemCannotBeCreatedWithoutDisposalReason() {
-        IlliquidAssetCreateRequest request = new IlliquidAssetCreateRequest("Кабель", "м", 0f);
+        IlliquidAssetCreateRequest request = new IlliquidAssetCreateRequest(
+                "Кабель",
+                "м",
+                0f,
+                IlliquidAssetCreateRequest.InflowReasonEnum.INVENTORY_FOUND
+        );
 
         assertThatThrownBy(() -> service.create(request))
                 .isInstanceOf(BadRequestException.class)
@@ -124,6 +134,40 @@ class IlliquidAssetServiceTest {
         assertThat(history.getNewQuantity()).isZero();
         assertThat(history.getQuantityDelta()).isEqualTo(-5f);
         assertThat(history.getReason()).isEqualTo("RETAIL_SALE");
+    }
+
+    @Test
+    void createFromTenderRequiresLinkAndCommentAndStoresOnlyTenderId() {
+        IlliquidAssetCreateRequest request = new IlliquidAssetCreateRequest(
+                "Кабель",
+                "м",
+                4f,
+                IlliquidAssetCreateRequest.InflowReasonEnum.TENDER_PURCHASE
+        );
+
+        assertThatThrownBy(() -> service.create(request))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessage("tenderLink is required");
+
+        request.setTenderLink("https://crm.example/tenders/42");
+        when(tenderRepository.existsById(42L)).thenReturn(true);
+        assertThatThrownBy(() -> service.create(request))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessage("comment is required for TENDER_PURCHASE reason");
+
+        request.setComment("Осталось после исполнения тендера");
+        when(assetRepository.save(any(IlliquidAssets.class))).thenAnswer(invocation -> {
+            IlliquidAssets saved = invocation.getArgument(0);
+            saved.setId(11L);
+            return saved;
+        });
+        service.create(request);
+
+        ArgumentCaptor<IlliquidAssetHistory> historyCaptor = ArgumentCaptor.forClass(IlliquidAssetHistory.class);
+        verify(historyRepository).save(historyCaptor.capture());
+        assertThat(historyCaptor.getValue().getReason()).isEqualTo("TENDER_PURCHASE");
+        assertThat(historyCaptor.getValue().getRelatedTenderId()).isEqualTo(42L);
+        assertThat(historyCaptor.getValue().getComment()).isEqualTo("Осталось после исполнения тендера");
     }
 
     @Test

@@ -46,7 +46,6 @@ public class IlliquidAssetService {
     private static final int MAX_PAGE_SIZE = 100;
     private static final String STATUS_OPEN = "OPEN";
     private static final String STATUS_CLOSED = "CLOSED";
-    private static final String CREATION_REASON = "CREATION";
 
     private final IlliquidAssetsRepository assetRepository;
     private final IlliquidAssetHistoryRepository historyRepository;
@@ -100,6 +99,9 @@ public class IlliquidAssetService {
         String unit = requireText(request.getUnitOfMeasurement(), "unitOfMeasurement");
         float quantity = requirePositiveQuantity(request.getQuantity(), "quantity");
         User actor = currentUser();
+        String reason = validateInflowReason(normalizeReason(enumValue(request.getInflowReason()), "inflowReason"));
+        Long tenderId = resolveTenderIdIfRequired(reason, request.getTenderLink());
+        validateCommentRequirements(reason, request.getComment(), true);
 
         IlliquidAssets asset = new IlliquidAssets();
         asset.setCommodityMaterialValue(name);
@@ -112,7 +114,7 @@ public class IlliquidAssetService {
         asset.setAssetStatus(STATUS_OPEN);
 
         IlliquidAssets saved = assetRepository.save(asset);
-        saveHistory(saved, IlliquidAssetHistoryOperationType.CREATION, 0f, quantity, quantity, CREATION_REASON, null, null, actor);
+        saveHistory(saved, IlliquidAssetHistoryOperationType.CREATION, 0f, quantity, quantity, reason, request.getComment(), tenderId, actor);
         return toDetailsResponse(saved);
     }
 

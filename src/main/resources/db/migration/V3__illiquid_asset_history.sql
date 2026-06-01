@@ -41,7 +41,6 @@ CREATE TABLE IF NOT EXISTS illiquid_asset_history
     )),
     CONSTRAINT chk_illiquid_asset_history_quantity_nonnegative CHECK (old_quantity >= 0 AND new_quantity >= 0),
     CONSTRAINT chk_illiquid_asset_history_reason CHECK (reason IN (
-        'CREATION',
         'RETAIL_SALE',
         'TENDER_SALE',
         'DAMAGE_DISPOSAL',
