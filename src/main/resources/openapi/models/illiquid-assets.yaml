@@ -1,0 +1,163 @@
+components:
+  schemas:
+    IlliquidAssetCreateRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        unitOfMeasurement:
+          type: string
+        quantity:
+          type: number
+          format: float
+          minimum: 0
+          exclusiveMinimum: true
+        description:
+          type: string
+      required:
+        - name
+        - unitOfMeasurement
+        - quantity
+
+    IlliquidAssetUpdateRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        unitOfMeasurement:
+          type: string
+        description:
+          type: string
+
+    IlliquidAssetQuantityChangeRequest:
+      type: object
+      properties:
+        quantityDelta:
+          type: number
+          format: float
+          description: Positive value increases quantity, negative value decreases quantity.
+        outflowReason:
+          type: string
+          enum:
+            - RETAIL_SALE
+            - TENDER_SALE
+            - DAMAGE_DISPOSAL
+            - EXPIRED_DISPOSAL
+            - OTHER
+        inflowReason:
+          type: string
+          enum:
+            - TENDER_PURCHASE
+            - INVENTORY_FOUND
+            - RETURN
+            - OTHER
+        tenderLink:
+          type: string
+        comment:
+          type: string
+      required:
+        - quantityDelta
+
+    IlliquidAssetCloseRequest:
+      type: object
+      properties:
+        reason:
+          type: string
+          enum:
+            - RETAIL_SALE
+            - TENDER_SALE
+            - DAMAGE_DISPOSAL
+            - EXPIRED_DISPOSAL
+            - OTHER
+        tenderLink:
+          type: string
+        comment:
+          type: string
+      required:
+        - reason
+
+    IlliquidAssetSummaryResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+        unitOfMeasurement:
+          type: string
+        quantity:
+          type: number
+          format: float
+        description:
+          type: string
+        status:
+          type: string
+          enum: [OPEN, CLOSED]
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    IlliquidAssetDetailsResponse:
+      allOf:
+        - $ref: "#/components/schemas/IlliquidAssetSummaryResponse"
+
+    IlliquidAssetPageResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/IlliquidAssetSummaryResponse"
+        page:
+          type: integer
+          format: int32
+        size:
+          type: integer
+          format: int32
+        totalElements:
+          type: integer
+          format: int64
+        totalPages:
+          type: integer
+          format: int32
+
+    IlliquidAssetHistoryResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        assetId:
+          type: integer
+          format: int64
+        operationType:
+          type: string
+          enum: [CREATION, INCREASE, DECREASE, CLOSING]
+        oldQuantity:
+          type: number
+          format: float
+        newQuantity:
+          type: number
+          format: float
+        quantityDelta:
+          type: number
+          format: float
+        reason:
+          type: string
+        comment:
+          type: string
+        relatedTenderId:
+          type: integer
+          format: int64
+        changedById:
+          type: integer
+          format: int64
+        changedByUsername:
+          type: string
+        createdAt:
+          type: string
+          format: date-time

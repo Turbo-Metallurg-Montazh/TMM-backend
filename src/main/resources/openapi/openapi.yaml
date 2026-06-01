@@ -113,3 +113,18 @@ paths:
 
   /api/tender-workflows/{id}/counterparty-check:
     $ref: "./contracts/tender-workflows/tender-workflows.yaml#/tenderWorkflowCounterpartyCheck"
+
+  /api/warehouse/illiquid-assets:
+    $ref: "./contracts/warehouse/illiquid-assets.yaml#/illiquidAssets"
+
+  /api/warehouse/illiquid-assets/{id}:
+    $ref: "./contracts/warehouse/illiquid-assets.yaml#/illiquidAssetById"
+
+  /api/warehouse/illiquid-assets/{id}/quantity:
+    $ref: "./contracts/warehouse/illiquid-assets.yaml#/illiquidAssetQuantity"
+
+  /api/warehouse/illiquid-assets/{id}/close:
+    $ref: "./contracts/warehouse/illiquid-assets.yaml#/illiquidAssetClose"
+
+  /api/warehouse/illiquid-assets/{id}/history:
+    $ref: "./contracts/warehouse/illiquid-assets.yaml#/illiquidAssetHistory"

@@ -1,0 +1,276 @@
+illiquidAssets:
+  get:
+    tags: [Warehouse]
+    summary: List illiquid warehouse assets
+    operationId: listIlliquidAssets
+    parameters:
+      - in: query
+        name: status
+        schema:
+          type: string
+          enum: [OPEN, CLOSED]
+      - in: query
+        name: q
+        schema:
+          type: string
+      - in: query
+        name: page
+        schema:
+          type: integer
+          format: int32
+          default: 0
+          minimum: 0
+      - in: query
+        name: size
+        schema:
+          type: integer
+          format: int32
+          default: 20
+          minimum: 1
+          maximum: 100
+      - in: query
+        name: sort
+        schema:
+          type: string
+          default: updatedAt
+      - in: query
+        name: direction
+        schema:
+          type: string
+          default: DESC
+    responses:
+      '200':
+        description: Illiquid asset page
+        content:
+          application/json:
+            schema:
+              $ref: "../../models/illiquid-assets.yaml#/components/schemas/IlliquidAssetPageResponse"
+      '401':
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: "../../models/auth.yaml#/components/schemas/ErrorResponse"
+      '403':
+        description: Forbidden
+        content:
+          application/json:
+            schema:
+              $ref: "../../models/auth.yaml#/components/schemas/ErrorResponse"
+  post:
+    tags: [Warehouse]
+    summary: Create illiquid warehouse asset
+    operationId: createIlliquidAsset
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../../models/illiquid-assets.yaml#/components/schemas/IlliquidAssetCreateRequest"
+    responses:
+      '201':
+        description: Illiquid asset created
+        content:
+          application/json:
+            schema:
+              $ref: "../../models/illiquid-assets.yaml#/components/schemas/IlliquidAssetDetailsResponse"
+      '400':
+        description: Invalid request
+        content:
+          application/json:
+            schema:
+              $ref: "../../models/auth.yaml#/components/schemas/ErrorResponse"
+      '401':
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: "../../models/auth.yaml#/components/schemas/ErrorResponse"
+      '403':
+        description: Forbidden
+        content:
+          application/json:
+            schema:
+              $ref: "../../models/auth.yaml#/components/schemas/ErrorResponse"
+
+illiquidAssetById:
+  get:
+    tags: [Warehouse]
+    summary: Get illiquid asset by id
+    operationId: getIlliquidAssetById
+    parameters:
+      - $ref: "#/components/parameters/IlliquidAssetId"
+    responses:
+      '200':
+        description: Illiquid asset details
+        content:
+          application/json:
+            schema:
+              $ref: "../../models/illiquid-assets.yaml#/components/schemas/IlliquidAssetDetailsResponse"
+      '404':
+        description: Illiquid asset not found
+        content:
+          application/json:
+            schema:
+              $ref: "../../models/auth.yaml#/components/schemas/ErrorResponse"
+  patch:
+    tags: [Warehouse]
+    summary: Update illiquid asset card
+    operationId: updateIlliquidAsset
+    parameters:
+      - $ref: "#/components/parameters/IlliquidAssetId"
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../../models/illiquid-assets.yaml#/components/schemas/IlliquidAssetUpdateRequest"
+    responses:
+      '200':
+        description: Illiquid asset updated
+        content:
+          application/json:
+            schema:
+              $ref: "../../models/illiquid-assets.yaml#/components/schemas/IlliquidAssetDetailsResponse"
+      '400':
+        description: Invalid request
+        content:
+          application/json:
+            schema:
+              $ref: "../../models/auth.yaml#/components/schemas/ErrorResponse"
+      '404':
+        description: Illiquid asset not found
+        content:
+          application/json:
+            schema:
+              $ref: "../../models/auth.yaml#/components/schemas/ErrorResponse"
+  delete:
+    tags: [Warehouse]
+    summary: Close illiquid asset instead of physical delete
+    operationId: deleteIlliquidAsset
+    parameters:
+      - $ref: "#/components/parameters/IlliquidAssetId"
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../../models/illiquid-assets.yaml#/components/schemas/IlliquidAssetCloseRequest"
+    responses:
+      '200':
+        description: Illiquid asset closed
+        content:
+          application/json:
+            schema:
+              $ref: "../../models/illiquid-assets.yaml#/components/schemas/IlliquidAssetDetailsResponse"
+      '400':
+        description: Invalid request
+        content:
+          application/json:
+            schema:
+              $ref: "../../models/auth.yaml#/components/schemas/ErrorResponse"
+      '404':
+        description: Illiquid asset not found
+        content:
+          application/json:
+            schema:
+              $ref: "../../models/auth.yaml#/components/schemas/ErrorResponse"
+
+illiquidAssetQuantity:
+  post:
+    tags: [Warehouse]
+    summary: Change illiquid asset quantity
+    operationId: changeIlliquidAssetQuantity
+    parameters:
+      - $ref: "#/components/parameters/IlliquidAssetId"
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../../models/illiquid-assets.yaml#/components/schemas/IlliquidAssetQuantityChangeRequest"
+    responses:
+      '200':
+        description: Quantity changed
+        content:
+          application/json:
+            schema:
+              $ref: "../../models/illiquid-assets.yaml#/components/schemas/IlliquidAssetDetailsResponse"
+      '400':
+        description: Invalid request
+        content:
+          application/json:
+            schema:
+              $ref: "../../models/auth.yaml#/components/schemas/ErrorResponse"
+      '404':
+        description: Illiquid asset not found
+        content:
+          application/json:
+            schema:
+              $ref: "../../models/auth.yaml#/components/schemas/ErrorResponse"
+
+illiquidAssetClose:
+  post:
+    tags: [Warehouse]
+    summary: Close illiquid asset
+    operationId: closeIlliquidAsset
+    parameters:
+      - $ref: "#/components/parameters/IlliquidAssetId"
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../../models/illiquid-assets.yaml#/components/schemas/IlliquidAssetCloseRequest"
+    responses:
+      '200':
+        description: Illiquid asset closed
+        content:
+          application/json:
+            schema:
+              $ref: "../../models/illiquid-assets.yaml#/components/schemas/IlliquidAssetDetailsResponse"
+      '400':
+        description: Invalid request
+        content:
+          application/json:
+            schema:
+              $ref: "../../models/auth.yaml#/components/schemas/ErrorResponse"
+      '404':
+        description: Illiquid asset not found
+        content:
+          application/json:
+            schema:
+              $ref: "../../models/auth.yaml#/components/schemas/ErrorResponse"
+
+illiquidAssetHistory:
+  get:
+    tags: [Warehouse]
+    summary: List illiquid asset history
+    operationId: listIlliquidAssetHistory
+    parameters:
+      - $ref: "#/components/parameters/IlliquidAssetId"
+    responses:
+      '200':
+        description: Illiquid asset history
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: "../../models/illiquid-assets.yaml#/components/schemas/IlliquidAssetHistoryResponse"
+      '404':
+        description: Illiquid asset not found
+        content:
+          application/json:
+            schema:
+              $ref: "../../models/auth.yaml#/components/schemas/ErrorResponse"
+
+components:
+  parameters:
+    IlliquidAssetId:
+      in: path
+      name: id
+      required: true
+      schema:
+        type: integer
+        format: int64
