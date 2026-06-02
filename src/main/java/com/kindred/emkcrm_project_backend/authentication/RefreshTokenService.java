@@ -36,7 +36,7 @@ public class RefreshTokenService {
             RefreshTokenRepository refreshTokenRepository,
             JwtTokenProvider jwtTokenProvider,
             AuthCookieService authCookieService,
-            @Value("${security.jwt.refresh-token.expire-length:2592000000}") long refreshValidityInMilliseconds
+            @Value("${security.jwt.refresh-token.expire-length:604800000}") long refreshValidityInMilliseconds
     ) {
         this.refreshTokenRepository = refreshTokenRepository;
         this.jwtTokenProvider = jwtTokenProvider;
@@ -73,7 +73,7 @@ public class RefreshTokenService {
             throw new UnauthorizedException("Unauthorized");
         }
 
-        if (existingToken.getExpiresAt().isBefore(now) || !existingToken.getUser().isEnabled()) {
+        if (!existingToken.getExpiresAt().isAfter(now) || !existingToken.getUser().isEnabled()) {
             existingToken.setRevokedAt(now);
             refreshTokenRepository.save(existingToken);
             authCookieService.clearAuthCookies(response);

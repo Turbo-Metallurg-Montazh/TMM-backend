@@ -65,7 +65,7 @@ security:
       secret-key: ${SECURITY_JWT_TOKEN_SECRET_KEY:change-me-change-me-change-me-change-me}
       expire-length: ${SECURITY_JWT_ACCESS_TOKEN_EXPIRE_LENGTH:900000} # 15 minutes
     refresh-token:
-      expire-length: ${SECURITY_JWT_REFRESH_TOKEN_EXPIRE_LENGTH:2592000000} # 30 days
+      expire-length: ${SECURITY_JWT_REFRESH_TOKEN_EXPIRE_LENGTH:604800000} # 7 days
 
 logging:
   level:
