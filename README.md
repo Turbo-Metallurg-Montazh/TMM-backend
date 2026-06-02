@@ -47,6 +47,8 @@ Backend-сервис для CRM: аутентификация пользоват
 - `SECURITY_AUTH_ALLOWED_ORIGINS`
 - `SECURITY_AUTH_COOKIE_SECURE`
 - `SECURITY_AUTH_COOKIE_SAME_SITE`
+- `SECURITY_AUTH_COOKIE_DOMAIN`
+- `SECURITY_AUTH_COOKIE_CLEANUP_DOMAINS`
 - `EXTERNAL_API_KONTUR_API_KEY`
 - `PUBLIC_AI_CLOUDFLARE_ACCOUNT_ID`
 - `PUBLIC_AI_CLOUDFLARE_API_TOKEN`
@@ -93,6 +95,7 @@ export SPRING_DATASOURCE_PASSWORD=postgres
 
 - JWT access-токен передается только в HttpOnly cookie `access_token`, не в `Authorization` header.
 - Refresh-токен передается в HttpOnly cookie `refresh_token`, хранится в БД только как SHA-256 hash и ротируется на каждом `POST /refresh`.
+- Перед выпуском новых auth cookies backend удаляет старые host-only cookies текущего API-хоста и domain cookies из `SECURITY_AUTH_COOKIE_CLEANUP_DOMAINS`.
 - Для unsafe-запросов (`POST`, `PUT`, `DELETE`) фронтенд должен отправлять header `X-XSRF-TOKEN` со значением из readable cookie `XSRF-TOKEN`.
 - Все запросы с cookie должны выполняться с credentials (`credentials: "include"` / `withCredentials: true`).
 - Backend дополнительно проверяет `Origin`/`Referer` по списку `SECURITY_AUTH_ALLOWED_ORIGINS`.

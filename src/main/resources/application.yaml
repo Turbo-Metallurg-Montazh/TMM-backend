@@ -59,6 +59,7 @@ security:
       secure: ${SECURITY_AUTH_COOKIE_SECURE:true}
       same-site: ${SECURITY_AUTH_COOKIE_SAME_SITE:Strict}
       domain: ${SECURITY_AUTH_COOKIE_DOMAIN:}
+      cleanup-domains: ${SECURITY_AUTH_COOKIE_CLEANUP_DOMAINS:api.turbo-metallurg-montazh.ru,turbo-metallurg-montazh.ru}
   jwt:
     token:
       secret-key: ${SECURITY_JWT_TOKEN_SECRET_KEY:change-me-change-me-change-me-change-me}

@@ -117,6 +117,15 @@ class AuthApiIntegrationTest {
         assertThat(cookieHeader(setCookieHeaders, AuthCookieService.ACCESS_TOKEN_COOKIE)).contains("HttpOnly");
         assertThat(cookieHeader(setCookieHeaders, AuthCookieService.REFRESH_TOKEN_COOKIE)).contains("HttpOnly");
         assertThat(cookieHeader(setCookieHeaders, AuthCookieService.CSRF_TOKEN_COOKIE)).doesNotContain("HttpOnly");
+        assertThat(setCookieHeaders)
+                .anySatisfy(header -> assertThat(header)
+                        .startsWith(AuthCookieService.REFRESH_TOKEN_COOKIE + "=;")
+                        .contains("Domain=api.turbo-metallurg-montazh.ru")
+                        .contains("Max-Age=0"))
+                .anySatisfy(header -> assertThat(header)
+                        .startsWith(AuthCookieService.REFRESH_TOKEN_COOKIE + "=;")
+                        .contains("Domain=turbo-metallurg-montazh.ru")
+                        .contains("Max-Age=0"));
     }
 
     @Test
@@ -205,6 +214,7 @@ class AuthApiIntegrationTest {
     private String cookieHeader(java.util.List<String> setCookieHeaders, String cookieName) {
         return setCookieHeaders.stream()
                 .filter(header -> header.startsWith(cookieName + "="))
+                .filter(header -> !header.startsWith(cookieName + "=;"))
                 .findFirst()
                 .orElseThrow();
     }

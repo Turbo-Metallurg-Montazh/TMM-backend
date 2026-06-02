@@ -19,9 +19,7 @@ public class CsrfCookieFilter extends OncePerRequestFilter {
     private static final Set<String> EXCLUDED_PATHS = Set.of(
             "/login",
             "/refresh",
-            "/logout",
-            "/password-reset/confirm",
-            "/admin/users/reset-password"
+            "/password-reset/confirm"
     );
 
     @Override
