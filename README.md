@@ -81,6 +81,50 @@ export SPRING_DATASOURCE_PASSWORD=postgres
 - OpenAPI JSON: `http://localhost:8080/v3/api-docs`
 - pgAdmin: `http://localhost:8888` (`admin@example.com` / `admin`)
 
+## Dev-профиль без авторизации
+
+Для локальной разработки есть Spring profile `dev`. В нём:
+
+- JWT, CSRF и проверка Origin не применяются.
+- Любой HTTP-запрос получает аутентификацию от имени `dev-user`.
+- `dev-user` автоматически создается/обновляется в БД и получает роль `DEVELOPER`.
+- Все `@PreAuthorize` checks проходят, потому что dev-запросу выдаются все permissions из таблицы `permission`.
+
+Запуск из терминала:
+
+```bash
+docker compose -f docker-compose.local.yml up -d
+SPRING_PROFILES_ACTIVE=dev ./mvnw spring-boot:run
+```
+
+При стандартном `docker-compose.local.yml` datasource env можно не задавать: `application-dev.yaml` использует `jdbc:postgresql://localhost:5432/emk_project`, `postgres` / `postgres`.
+
+### IntelliJ IDEA Run Configuration для dev
+
+1. Откройте `Run | Edit Configurations...`.
+2. Создайте `+ | Spring Boot`.
+3. Укажите:
+   - `Name`: `EMK CRM Backend Dev`
+   - `Main class`: `com.kindred.emkcrm_project_backend.EmkCrmProjectBackendApplication`
+   - `JRE`: JDK 26
+   - `Active profiles`: `dev`
+   - `Working directory`: корень проекта
+4. Если используете стандартную локальную БД из `docker-compose.local.yml`, env можно оставить пустым. Для другой БД добавьте:
+
+```text
+SPRING_DATASOURCE_URL=jdbc:postgresql://localhost:5432/emk_project
+SPRING_DATASOURCE_USERNAME=postgres
+SPRING_DATASOURCE_PASSWORD=postgres
+```
+
+Перед запуском конфигурации поднимите PostgreSQL:
+
+```bash
+docker compose -f docker-compose.local.yml up -d
+```
+
+Не используйте профиль `dev` на staging/production: он намеренно отключает авторизацию.
+
 ## API (основные endpoint'ы)
 
 Публичные:

@@ -3,6 +3,7 @@ package com.kindred.emkcrm_project_backend.authentication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.context.annotation.Profile;
 import org.springframework.http.MediaType;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -23,6 +24,7 @@ import java.util.stream.Collectors;
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
+@Profile("!dev")
 public class SecurityConfig{
 
     @Lazy
@@ -51,8 +53,8 @@ public class SecurityConfig{
                 }))
                 .authorizeHttpRequests(authorizeRequests ->
                         authorizeRequests
-                                .requestMatchers("/actuator/health/**", "/actuator/info", "/actuator/prometheus").permitAll()
-                                .requestMatchers("/login", "/refresh", "/logout", "/password-reset/confirm", "/admin/users/reset-password").permitAll() // Allow these URLs
+                                .requestMatchers("/actuator/health/**", "/actuator/prometheus").permitAll()
+                                .requestMatchers("/login", "/refresh", "/password-reset/confirm").permitAll() // Allow these URLs
                                 .anyRequest().authenticated() // All other requests need to be authenticated
                 )
                 .exceptionHandling(exceptionHandling -> exceptionHandling

@@ -1,0 +1,24 @@
+spring:
+  config:
+    activate:
+      on-profile: dev
+
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/emk_project}
+    username: ${SPRING_DATASOURCE_USERNAME:postgres}
+    password: ${SPRING_DATASOURCE_PASSWORD:postgres}
+
+security:
+  dev-auth:
+    username: ${SECURITY_DEV_AUTH_USERNAME:dev-user}
+    email: ${SECURITY_DEV_AUTH_EMAIL:dev-user@example.local}
+  auth:
+    cookie:
+      secure: false
+      same-site: Lax
+      domain:
+      cleanup-domains:
+
+logging:
+  level:
+    com.kindred.emkcrm_project_backend.authentication.dev: INFO
