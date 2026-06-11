@@ -125,7 +125,7 @@ class AdminApiIntegrationTest {
     }
 
     @Test
-    void resetUserPasswordIsAvailableWithoutAuthentication() throws Exception {
+    void resetUserPasswordIsNotAvailableWithoutAuthentication() throws Exception {
         SendPasswordResetLinkRequest request = new SendPasswordResetLinkRequest();
         request.setEmail("alice@example.com");
 
@@ -135,8 +135,7 @@ class AdminApiIntegrationTest {
         mockMvc.perform(post("/admin/users/reset-password")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.message").value("Ссылка для сброса пароля отправлена на alice@example.com"));
+                .andExpect(status().isUnauthorized());
     }
 
     @Test
