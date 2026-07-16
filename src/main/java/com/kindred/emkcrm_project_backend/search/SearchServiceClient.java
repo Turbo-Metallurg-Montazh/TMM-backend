@@ -60,10 +60,10 @@ public class SearchServiceClient {
                     .retrieve()
                     .body(String.class);
         } catch (HttpStatusCodeException e) {
-            log.warn("Search service call failed: path={}, status={}", path, e.getStatusCode());
+            log.warn("POST search service failed: path={}, status={}", path, e.getStatusCode());
             throw new ServiceUnavailableException("Search service returned " + e.getStatusCode());
         } catch (Exception e) {
-            log.error("Search service call failed: path={}", path, e);
+            log.error("POST search service failed: path={}", path, e);
             throw new ServiceUnavailableException("Failed to call search service");
         }
     }
@@ -76,10 +76,10 @@ public class SearchServiceClient {
                     .retrieve()
                     .body(String.class);
         } catch (HttpStatusCodeException e) {
-            log.warn("Search service call failed: path={}, status={}", path, e.getStatusCode());
+            log.warn("GET search service failed: path={}, status={}", path, e.getStatusCode());
             throw new ServiceUnavailableException("Search service returned " + e.getStatusCode());
         } catch (Exception e) {
-            log.error("Search service call failed: path={}", path, e);
+            log.error("GET search service failed: path={}", path, e);
             throw new ServiceUnavailableException("Failed to call search service");
         }
     }
