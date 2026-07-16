@@ -122,6 +122,43 @@ schedule:
 format:
   date-time: "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
 
+search-service:
+  base-url: ${SEARCH_SERVICE_BASE_URL:http://localhost:8001}
+  service-name: ${SEARCH_SERVICE_NAME:emk-backend}
+  private-key-pem: |
+    -----BEGIN RSA PRIVATE KEY-----
+    MIIEogIBAAKCAQEAmkwbWMcIIsVsYSJut+1Y4EeI7vjI/It9BbiWsNhJVRQqSPed
+    dDRa6lWIVuU3tmiylecyb5a+DGXaR6u/7OeGs51ppjAtOa1AglIHGkYyVhGU2vAV
+    PeIOeporbD+qaTefljyM+cQ2hLhtbjXfgkK2fSRDa2ODVLLd6Vj3pkfngv3Qd794
+    Fb1rPnmWm30XEszYbUxKSNQxlVM705bp7DezneCxFssCzbd4G6Sl0YaFD+617KQr
+    L0Pi/G5zt3q6obMwLQtERRq9ekwA3bBHOkBiPhyx53mKKCp0Pe3OBRPGGJfkyu/C
+    QO5vt/zWCE7xx0o4luRRJ+fNuNeAtPXjUkbVewIDAQABAoIBAGq3Pqa9KYxa/SWF
+    WgxN1Q1xjGyzltbMZtDhJR/0x2tXghNrZvQrDcJLG/v1lv3LFdEF0WVKXfFXNIwj
+    Zp+kVg6+TYbKhU0B3b8EmrL6X/AVQt3V9OsTAS6cmHHK6sLQ3Mhc4qgQpCBRKiZy
+    jj6ag3qz7QlGD1wyRbcReF8CFkYK0QH9avkDQNzjLpTYoNAetvRL095tCJwbd0sh
+    930DCsNLDyS+TaEq3her9BSlkmaHQNI3sPd0KTJ7OnYQWdmu6+f1c3+hwjKroSql
+    308aFE//yc4T6GMgqDM4DXM46VoBZWVoHI40IMWp06K70UO3sW9Bu23/di/IT0I0
+    p4IucnkCgYEAyhM4+GTgoCGardghZKRwixN4izH0spBZl+ojoMKbt3eSp1JN+vOU
+    2Ag+MUwKDH2MX8jpiPhGx8G6Vi7Y7zR8xBNIhWgXuZmZPMIwP84aqaY2qktZxK2/
+    VBwTt/JD2BwKVmr+3OZUAeHQkAygKT9XilUmcWLBQHyVd2UDIM6P9y0CgYEAw3jw
+    oLHII9KeRFfChg0+KjFmrJ0iXF/u7gCtr8op0KL/wDjtdGJWAJa8KaONOlZttCDe
+    SwoZUE3dRBKu9GEDt9yNkBZer7MkzAkSKtQ2X82Xkihw3E59P2NcH8fUUJTcIeRb
+    ie4wXkW27SUc4Hgg6zP4pyywA30Xqn5KE8ELaEcCgYB467HOqgbkq9c0qj2pTOFv
+    x9H9cYJdDBYg2uJBA9NMoUfnyk+RmQr7j0swErF8sfA7LS3aYb9xL5NCmTwFQCJc
+    7rEZ66Uu0iQpgIaA1+OKm0Tg+MAZ+mKggUCndVh1zKm+9r3WEBo7GhbE7Fk29Yl7
+    5OJhPVgpL6P9Uzvg+NqbbQKBgEJRlvo+NxQIUlAHomTOu2efSSGJUm4a0jqHmmYI
+    5fT2SGUUK2QQNPOQMJjD95dyWVgCysiUzY/USxzcZeVdwOAxgQoAvPFJi1N6RGKp
+    iyUn4KPi+p+UNaQ69reFmcAZMTKCgpgiauChMHX24Hw75ZdHE7bMT49vcocSv9lB
+    5rfjAoGAQ91GcuPXG/eyy+etEhCDR9g0XN6eBzXEG0VQst5Dh9FtCeO4YeSS4wXL
+    4qkfrFl/VouQ/uxnmGSZjNIMxsjYE1tEu0FH3FhaZBT6FciixjpoLGYif8JnmuG1
+    3YbQBjSDl7dLVqNSAkyIRsnlOLkVV0P927DKNyATk775Ggt+d3Y=
+    -----END RSA PRIVATE KEY-----
+  scopes:
+    - catalogs:read
+    - catalogs:write
+  token-ttl-seconds: ${SEARCH_SERVICE_TOKEN_TTL:600}
+  token-refresh-margin-seconds: ${SEARCH_SERVICE_TOKEN_REFRESH_MARGIN:60}
+
 public-ai:
   cloudflare:
     account-id: ${PUBLIC_AI_CF_ACCOUNT_ID:local-account-id}

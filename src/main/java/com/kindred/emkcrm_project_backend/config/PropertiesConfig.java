@@ -10,6 +10,7 @@ import org.springframework.context.annotation.Configuration;
         KonturApiProperties.class,
         PaginationProperties.class,
         FormatProperties.class,
-        PublicAiProperties.class
+        PublicAiProperties.class,
+        SearchServiceProperties.class
 })
 public class PropertiesConfig {}
